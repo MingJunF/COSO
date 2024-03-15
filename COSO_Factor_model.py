@@ -35,7 +35,7 @@ class COSOFactorModel(nn.Module):
         #self.term_a = InfoNCE(self.num_covariates+self.num_confounders+self.num_S, self.num_treatments)
         self.term_b = InfoNCE(self.num_covariates+self.num_confounders+self.num_treatments, self.num_outcomes)
         self.term_S = CLUB(self.num_covariates+self.num_confounders+self.num_treatments+self.num_S, self.num_covariates+self.num_confounders+self.num_treatments+self.num_outcomes)
-
+        self.term_o = InfoNCE(self.num_outcomes, self.num_outcomes)
         # Removed IV related terms
 
         # Confounder LSTM generation
@@ -56,9 +56,18 @@ class COSOFactorModel(nn.Module):
                 nn.Linear(self.fc_hidden_units // 2, 1)
             ).cuda(args.cuda_id)
             self.confounder_decoders.append(confounder_decoder)
-
-        # Removed IV decoders list
         self.to(torch.device(f'cuda:{args.cuda_id}'))
+
+        self.outcome_predictor = nn.Sequential(
+            nn.Linear(self.num_covariates + self.num_confounders + self.num_treatments, self.fc_hidden_units),
+            nn.ReLU(),
+            nn.Linear(self.fc_hidden_units, self.fc_hidden_units // 2),
+            nn.ReLU(),
+            nn.Linear(self.fc_hidden_units // 2, self.num_outcomes)
+        ).cuda(args.cuda_id)
+
+
+
     def trainable_init_h_confounder(self):
         h0 = torch.zeros(1, self.lstm_hidden_units)
         c0 = torch.zeros(1, self.lstm_hidden_units)
@@ -99,7 +108,11 @@ class COSOFactorModel(nn.Module):
         for treatment in range(self.num_treatments):
             confounder_pred_treatments.append(self.confounder_decoders[treatment](multitask_input_confounder))
         confounder_pred_treatments = torch.cat(confounder_pred_treatments, dim=-1).float()
-        return confounder_pred_treatments.view(-1, self.num_treatments), hidden_confounders.view(-1, self.num_confounders), S
+        multitask_input_outcome = torch.cat([hidden_confounders, current_covariates, confounder_pred_treatments], dim=-1).float()
+        predicted_outcome = self.outcome_predictor(multitask_input_outcome)
+
+
+        return confounder_pred_treatments.view(-1, self.num_treatments), hidden_confounders.view(-1, self.num_confounders), S, predicted_outcome
         
 
     # Removed inference predict confounder and IV function
@@ -109,7 +122,7 @@ class COSOFactorModel(nn.Module):
         for (batch_previous_covariates, batch_previous_treatments, batch_current_covariates,
              batch_target_treatments, batch_outcomes,batch_S) in self.gen_epoch(dataset,args):
             # 使用模型的前向传播计算confounders
-            _, confounder, S = self.forward(batch_previous_covariates, batch_previous_treatments, batch_current_covariates,batch_S)
+            _, confounder, S , predicted_outcome= self.forward(batch_previous_covariates, batch_previous_treatments, batch_current_covariates,batch_S)
             
             # 重新整形并转换数据，准备收集
             confounder = confounder.reshape(-1, self.num_confounders)
@@ -141,29 +154,55 @@ class COSOFactorModel(nn.Module):
             yield (batch_previous_covariates, batch_previous_treatments, batch_current_covariates,
                 batch_target_treatments, batch_outcomes,batch_S)
             
+def train_model(factor_model, dataset_train, dataset_val, args):
+    loss_function = nn.MSELoss()
+    optimizer = optim.Adam(factor_model.parameters(), lr=factor_model.learning_rate)
 
-    def eval_network(self, dataset_val):
-        self.eval()  # 将模型设置为评估模式
+    for epoch in tqdm(range(factor_model.num_epochs)):
+        factor_model.train()
+        train_losses = []
+        for (batch_previous_covariates, batch_previous_treatments, batch_current_covariates,
+             batch_target_treatments, batch_outcomes,batch_S) in factor_model.gen_epoch(dataset_train,args):
+            # 注意这里的变量名已经根据您的要求进行了更改
+            confounder_pred_treatments, confounders, S= factor_model(batch_previous_covariates, batch_previous_treatments, batch_current_covariates, batch_S)
+            batch_current_covariates = batch_current_covariates.reshape(-1, factor_model.num_covariates).float()
+            treatment_targets = batch_target_treatments.reshape(-1, factor_model.num_treatments).float()
+            outcomes = batch_outcomes.reshape(-1, 1).float()
+            confounders = confounders.reshape(-1, factor_model.num_confounders).float()
+            # 使用confounders和S的逻辑调整损失计算
+            loss_a = factor_model.term_a(torch.cat([batch_current_covariates, confounders, S], dim=-1), treatment_targets)
+            loss_b = factor_model.term_b(torch.cat([batch_current_covariates, confounders, treatment_targets], dim=-1), outcomes)
+            #S = outcomes
+            # 使用term_s损失
+
+            loss_S = factor_model.term_S(torch.cat([batch_current_covariates, confounders, treatment_targets,S], dim=-1), torch.cat([batch_current_covariates, confounders, treatment_targets, outcomes], dim=-1))
+            # 总损失包含了term_a, term_b, 以及基于S的调整项
+            train_loss = -loss_a-loss_b + args.alpha *loss_S
+            optimizer.zero_grad()
+            train_loss.backward()
+            optimizer.step()
+            train_losses.append(train_loss.item())
+
+        factor_train_loss = np.mean(train_losses)
+
+        factor_model.eval()
         val_losses = []
-        with torch.no_grad():  # 在评估过程中不计算梯度
+        with torch.no_grad():
             for (batch_previous_covariates, batch_previous_treatments, batch_current_covariates,
-                batch_target_treatments, batch_outcomes, batch_S) in self.gen_epoch(dataset_val, self.args):
-                
-                confounder_pred_treatments, confounders, S = self(
-                    batch_previous_covariates, batch_previous_treatments, batch_current_covariates, batch_S)
-                batch_current_covariates = batch_current_covariates.reshape(-1, self.num_covariates).float()
-                treatment_targets = batch_target_treatments.reshape(-1, self.num_treatments).float()
+                 batch_target_treatments, batch_outcomes,batch_S) in factor_model.gen_epoch(dataset_val,args):
+
+                # 注意这里的变量名已经根据您的要求进行了更改，重复上述逻辑处理验证集
+                confounder_pred_treatments, confounders, S = factor_model(batch_previous_covariates, batch_previous_treatments, batch_current_covariates, batch_S)
+                batch_current_covariates = batch_current_covariates.reshape(-1, factor_model.num_covariates).float()
+                treatment_targets = batch_target_treatments.reshape(-1, factor_model.num_treatments).float()
                 outcomes = batch_outcomes.reshape(-1, 1).float()
-                confounders = confounders.reshape(-1, self.num_confounders).float()
-                
-                # 重新计算损失函数
-                loss_a = self.term_a(torch.cat([batch_current_covariates, confounders, S], dim=-1), treatment_targets)
-                loss_b = self.term_b(torch.cat([batch_current_covariates, confounders, treatment_targets], dim=-1), outcomes)
-                loss_S = self.term_S(torch.cat([batch_current_covariates, confounders, treatment_targets, S], dim=-1), 
-                                    torch.cat([batch_current_covariates, confounders, treatment_targets, outcomes], dim=-1))
-                val_loss = -loss_a - loss_b + self.args.alpha * loss_S
-                val_losses.append(val_loss.item())
-        
-        # 计算平均验证损失
-        validation_loss = np.mean(val_losses)
-        return validation_loss
+                confounders = confounders.reshape(-1, factor_model.num_confounders).float()
+                loss_a = factor_model.term_a(torch.cat([batch_current_covariates, confounders,S], dim=-1), treatment_targets)
+                loss_b = factor_model.term_b(torch.cat([batch_current_covariates, confounders, treatment_targets], dim=-1), outcomes)
+                loss_S = factor_model.term_S(torch.cat([batch_current_covariates, confounders, treatment_targets,S], dim=-1), torch.cat([batch_current_covariates, confounders, treatment_targets, outcomes], dim=-1))
+                val_loss =  -loss_a-loss_b+args.alpha *loss_S
+                val_losses.append(val_loss)
+
+            factor_val_loss = np.mean([loss.item() for loss in val_losses])
+
+        print(f"Epoch {epoch+1} ---- Train Loss: {factor_train_loss:.5f}, Val Loss: {factor_val_loss:.5f}")
