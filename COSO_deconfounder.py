@@ -266,7 +266,7 @@ def train_COSO_factor_model(dataset_train, dataset_val, dataset,train_index, val
         best_hyperparams = {
             'lstm_hidden_units': 128,
             'fc_hidden_units': 128,
-            'learning_rate': 0.01,
+            'learning_rate': 0.001,
             'batch_size': 64}
 
     # Train the model with the best hyperparameters after hyperparameter optimization
