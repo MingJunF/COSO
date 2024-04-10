@@ -1,0 +1,51 @@
+# external requirements
+importlib-metadata<5.0
+importlib-resources==5.12.0
+flake8
+python-dotenv>=0.5.1
+pytest
+numpy
+pandas>=1.3.0
+seaborn
+matplotlib
+scipy
+pytorch-lightning==1.4.5
+torchmetrics==0.6.0
+hydra-core
+hydra_colorlog
+mlflow
+scikit-learn
+tables
+ray[tune]
+
+git+https://github.com/fadel/pytorch_ema
+set PYTHONPATH=. && set CUDA_VISIBLE_DEVICES=0
+python runnables/train_enc_dec.py -m +dataset=mimic3_real +backbone=crn +backbone/crn_hparams/mimic3_real=diastolic_blood_pressure
+
+
+
+{'encoder_val_bce_loss': 0.407602995634079,
+ 'encoder_val_loss': 0.5233994722366333,
+ 'encoder_val_mse_loss': 0.11579645425081253}
+--------------------------------------------------------------------------------
+Testing: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00, 12.28it/s] 
+
+[2024-04-08 14:27:29,913][__main__][INFO] - Val normalised RMSE (all): 4.8795946961818535; Val normalised RMSE (orig): 4.90198454938477
+
+[2024-04-08 14:27:30,515][__main__][INFO] - Test normalised RMSE (all): 5.219466274233075; Test normalised RMSE (orig): 5.191786259141029.
+
+Epoch 199: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 619/619 [00:23<00:00, 26.92it/s, loss=0.817, v_num=0273] 
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+Testing:  86%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▋                       | 6/7 [00:00<00:00,  6.54it/s]--------------------------------------------------------------------------------
+DATALOADER:0 TEST RESULTS
+{'decoder_val_bce_loss': 0.4116228520870209,
+ 'decoder_val_loss': 0.7943000197410583,
+ 'decoder_val_mse_loss': 0.38267722725868225}
+--------------------------------------------------------------------------------
+Testing: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:01<00:00,  6.23it/s]
+
+[2024-04-08 15:45:56,349][__main__][INFO] - Val normalised RMSE (all): 8.875322805430269; Val normalised RMSE (orig): 8.875322805430272
+[2024-04-09 16:49:00,462][__main__][INFO] - Val normalised RMSE (all): 8.875322805430269; Val normalised RMSE (orig): 8.875322805430272
+
+[2024-04-08 15:46:04,774][__main__][INFO] - Test normalised RMSE (n-step prediction): {'2-step': 9.288695707506067, '3-step': 9.891909796646742, '4-step': 10.27054128850326, '5-step': 10.522066658869443, '6-step': 10.774673765313388}
+Test normalised RMSE (n-step prediction): {'2-step': 9.288695707506067, '3-step': 9.891909796646742, '4-step': 10.27054128850326, '5-step': 10.522066658869443, '6-step': 10.774673765313388}

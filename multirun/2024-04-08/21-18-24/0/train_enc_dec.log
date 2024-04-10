@@ -1,0 +1,115 @@
+[2024-04-08 21:18:24,797][__main__][INFO] - 
+model:
+  dim_treatments: ???
+  dim_vitals: ???
+  dim_static_features: ???
+  dim_outcomes: ???
+  name: CRN
+  encoder:
+    _target_: src.models.crn.CRNEncoder
+    seq_hidden_units: 144
+    br_size: 72
+    fc_hidden_units: 36
+    dropout_rate: 0.1
+    num_layer: 1
+    batch_size: 256
+    optimizer:
+      optimizer_cls: adam
+      learning_rate: 0.001
+      weight_decay: 0.0
+      lr_scheduler: false
+    tune_hparams: false
+    tune_range: 50
+    hparams_grid: null
+    resources_per_trial: null
+  train_decoder: true
+  decoder:
+    _target_: src.models.crn.CRNDecoder
+    seq_hidden_units: null
+    br_size: 94
+    fc_hidden_units: 188
+    dropout_rate: 0.2
+    num_layer: 1
+    batch_size: 256
+    optimizer:
+      optimizer_cls: adam
+      learning_rate: 0.0001
+      weight_decay: 0.0
+      lr_scheduler: false
+    tune_hparams: false
+    tune_range: 30
+    hparams_grid: null
+    resources_per_trial: null
+dataset:
+  val_batch_size: 512
+  treatment_mode: multilabel
+  _target_: src.data.MIMIC3RealDatasetCollection
+  seed: 100
+  name: mimic3_real
+  path: data/processed/all_hourly_data.h5
+  min_seq_length: 30
+  max_seq_length: 60
+  max_number: 5000
+  projection_horizon: 5
+  split:
+    val: 0.15
+    test: 0.15
+  autoregressive: true
+  treatment_list:
+  - vaso
+  outcome_list:
+  - diastolic blood pressure
+  vital_list:
+  - heart rate
+  - red blood cell count
+  - sodium
+  - mean blood pressure
+  - systemic vascular resistance
+  - glucose
+  - chloride urine
+  - glascow coma scale total
+  - hematocrit
+  - positive end-expiratory pressure set
+  - respiratory rate
+  - prothrombin time pt
+  - cholesterol
+  - hemoglobin
+  - creatinine
+  - blood urea nitrogen
+  - bicarbonate
+  - calcium ionized
+  - partial pressure of carbon dioxide
+  - magnesium
+  - anion gap
+  - phosphorous
+  - venous pvo2
+  - platelets
+  - calcium urine
+  static_list:
+  - gender
+  - ethnicity
+  - age
+  drop_first: false
+exp:
+  seed: 100
+  gpus:
+  - 0
+  max_epochs: 200
+  logging: true
+  mlflow_uri: http://127.0.0.1:5000
+  unscale_rmse: true
+  percentage_rmse: false
+  alpha: 1.0
+  update_alpha: true
+  alpha_rate: exp
+  balancing: grad_reverse
+  bce_weight: false
+  weights_ema: false
+  beta: 0.99
+
+[2024-04-08 21:18:24,817][src.data.mimic_iii.load_data][INFO] - Loading MIMIC-III dataset from D:\Mingjun\CausalTransformer/data/processed/all_hourly_data.h5.
+[2024-04-08 21:18:30,910][src.data.mimic_iii.load_data][INFO] - Number of patients filtered: 5000.
+[2024-04-08 21:18:32,533][src.data.mimic_iii.real_dataset][INFO] - Shape of processed train data: {'sequence_lengths': (3500,), 'prev_treatments': (3500, 59, 1), 'vitals': (3500, 59, 25), 'next_vitals': (3500, 58, 25), 'current_treatments': (3500, 59, 1), 'static_features': (3500, 44), 'active_entries': (3500, 59, 1), 'outputs': (3500, 59, 1), 'unscaled_outputs': (3500, 59, 1), 'prev_outputs': (3500, 59, 1), 'coso_vitals': (3500, 59, 25)}
+[2024-04-08 21:18:32,688][src.data.mimic_iii.real_dataset][INFO] - Shape of processed val data: {'sequence_lengths': (750,), 'prev_treatments': (750, 59, 1), 'vitals': (750, 59, 25), 'next_vitals': (750, 58, 25), 'current_treatments': (750, 59, 1), 'static_features': (750, 44), 'active_entries': (750, 59, 1), 'outputs': (750, 59, 1), 'unscaled_outputs': (750, 59, 1), 'prev_outputs': (750, 59, 1), 'coso_vitals': (750, 59, 25)}
+[2024-04-08 21:18:32,839][src.data.mimic_iii.real_dataset][INFO] - Shape of processed test data: {'sequence_lengths': (750,), 'prev_treatments': (750, 59, 1), 'vitals': (750, 59, 25), 'next_vitals': (750, 58, 25), 'current_treatments': (750, 59, 1), 'static_features': (750, 44), 'active_entries': (750, 59, 1), 'outputs': (750, 59, 1), 'unscaled_outputs': (750, 59, 1), 'prev_outputs': (750, 59, 1), 'coso_vitals': (750, 59, 25)}
+[2024-04-08 21:18:33,008][src.models.crn][INFO] - Input size of encoder: 71
