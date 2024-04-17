@@ -20,32 +20,42 @@ ray[tune]
 
 git+https://github.com/fadel/pytorch_ema
 set PYTHONPATH=. && set CUDA_VISIBLE_DEVICES=0
-python runnables/train_enc_dec.py -m +dataset=mimic3_real +backbone=crn +backbone/crn_hparams/mimic3_real=diastolic_blood_pressure
+python runnables/train_enc_dec.py -m +dataset=mimic3_real +backbone=crn +backbone/crn_hparams/mimic3_real=diastolic_blood_pressure exp.seed=10,101
+set PYTHONPATH=. && set CUDA_VISIBLE_DEVICES=0
+python runnables/train_enc_dec.py -m +dataset=cancer_sim +backbone=crn +backbone/crn_hparams/cancer_sim_domain_conf='0' exp.seed=10
+python runnables/train_multi.py -m +dataset=cancer_sim +backbone=ct +backbone/ct_hparams/cancer_sim_domain_conf='0' exp.seed=10
+
+python runnables/train_rmsn.py -m +dataset=mimic3_real +backbone=rmsn +backbone/rmsn_hparams/mimic3_real=diastolic_blood_pressure
+
+python runnables/train_coso.py -m +dataset=cancer_sim +backbone=coso +backbone/coso_hparams/cancer_sim_domain_conf='0' exp.seed=10
+
+python runnables/train_coso.py -m +dataset=mimic3_real +backbone=coso +backbone/coso_hparams/mimic3_real=diastolic_blood_pressure
+
+python runnables/train_multi.py -m +dataset=mimic3_real +backbone=ct +backbone/ct_hparams/mimic3_real=diastolic_blood_pressure
+{0, 1, 2, 5, 8, 12, 14, 17, 21, 22}
+{8: 0.015254496317095856, 9: 0.028802709881491362, 10: 0.03296330144614923, 17: 0.025865092584312466}
+{0: 4.157905729785558e-12, 1: 0.00011350671887220945, 2: 4.984441538896162e-46, 9: 0.0012077182066305735, 12: 0.003434134327426224, 24: 7.772403043318886e-06}
 
 
 
-{'encoder_val_bce_loss': 0.407602995634079,
- 'encoder_val_loss': 0.5233994722366333,
- 'encoder_val_mse_loss': 0.11579645425081253}
+
+
+{'encoder_val_bce_loss': 0.5289919972419739,
+ 'encoder_val_loss': 0.6795637011528015,
+ 'encoder_val_mse_loss': 0.15057174861431122}
+
+ {'encoder_val_bce_loss': 0.5881879329681396,
+ 'encoder_val_loss': 0.7776705026626587,
+ 'encoder_val_mse_loss': 0.18948256969451904}
 --------------------------------------------------------------------------------
-Testing: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 2/2 [00:00<00:00, 12.28it/s] 
-
-[2024-04-08 14:27:29,913][__main__][INFO] - Val normalised RMSE (all): 4.8795946961818535; Val normalised RMSE (orig): 4.90198454938477
-
-[2024-04-08 14:27:30,515][__main__][INFO] - Test normalised RMSE (all): 5.219466274233075; Test normalised RMSE (orig): 5.191786259141029.
-
-Epoch 199: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 619/619 [00:23<00:00, 26.92it/s, loss=0.817, v_num=0273] 
+Testing: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 13.94it/s] 
+[2024-04-17 14:37:14,467][src.models.time_varying_model][INFO] - RMSE calculation for val.
+[2024-04-17 14:37:14,468][src.models.time_varying_model][INFO] - Predictions for val.
 LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
-Testing:  86%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████▋                       | 6/7 [00:00<00:00,  6.54it/s]--------------------------------------------------------------------------------
-DATALOADER:0 TEST RESULTS
-{'decoder_val_bce_loss': 0.4116228520870209,
- 'decoder_val_loss': 0.7943000197410583,
- 'decoder_val_mse_loss': 0.38267722725868225}
---------------------------------------------------------------------------------
-Testing: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:01<00:00,  6.23it/s]
-
-[2024-04-08 15:45:56,349][__main__][INFO] - Val normalised RMSE (all): 8.875322805430269; Val normalised RMSE (orig): 8.875322805430272
-[2024-04-09 16:49:00,462][__main__][INFO] - Val normalised RMSE (all): 8.875322805430269; Val normalised RMSE (orig): 8.875322805430272
-
-[2024-04-08 15:46:04,774][__main__][INFO] - Test normalised RMSE (n-step prediction): {'2-step': 9.288695707506067, '3-step': 9.891909796646742, '4-step': 10.27054128850326, '5-step': 10.522066658869443, '6-step': 10.774673765313388}
-Test normalised RMSE (n-step prediction): {'2-step': 9.288695707506067, '3-step': 9.891909796646742, '4-step': 10.27054128850326, '5-step': 10.522066658869443, '6-step': 10.774673765313388}
+Predicting: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s]
+[2024-04-17 14:37:14,999][__main__][INFO] - Val normalised RMSE (all): 5.321746484068748; Val normalised RMSE (orig): 5.366947660324378
+[2024-04-17 14:37:15,000][src.models.time_varying_model][INFO] - RMSE calculation for test.
+[2024-04-17 14:37:15,000][src.models.time_varying_model][INFO] - Predictions for test.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+Predicting: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s]
+[2024-04-17 14:37:15,525][__main__][INFO] - Test normalised RMSE (all): 4.886092079818019; Test normalised RMSE (orig): 4.868773461319545.

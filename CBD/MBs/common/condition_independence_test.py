@@ -31,15 +31,17 @@ def cond_indep_test(data, var_index, target_index, cond_set=[], is_discrete=Fals
         X = np.empty((n, 0))
 
     # 根据变量类型调用相应的独立性测试
-    #if is_discrete:
-    if len(cond_set) > 0:
-        result = kci_test_vector(Y, E, X, alpha=alpha, catgorical_e=is_discrete)
-        pval = result['p_value']
-        dep = result['statistic']
+    if is_discrete:
+        if len(cond_set) > 0:
+            result = kci_test_vector(Y, E, X, alpha=alpha, catgorical_e=is_discrete)
+            pval = result['p_value']
+            dep = result['statistic']
+        else:
+            result = ki_test_vector(Y, E, alpha=alpha, catgorical_x=is_discrete)
+            pval = result['p_value']
+            dep = result['statistic']
     else:
-        result = ki_test_vector(Y, E, alpha=alpha, catgorical_x=is_discrete)  
-        pval = result['p_value']
-        dep = result['statistic']
+        CI, dep, pval = cond_indep_fisher_z(data, var_index, target_index, cond_set, alpha)
     #else:
 
 
@@ -85,8 +87,9 @@ def ki_test_vector(
     :return:
     """
     # === ASSIGN VARIABLES USED THROUGHOUT METHOD ===
-    X = X.numpy()
-    Y = Y.numpy()
+    if not isinstance(X, np.ndarray):
+        X = X.numpy()
+        Y = Y.numpy()
     if X.ndim == 1:
         X = X.reshape((len(X), 1))
     if Y.ndim == 1:
@@ -164,9 +167,10 @@ def kci_test_vector(
     :return: (statistic, critval, pval). The p-value for the null hypothesis that Y and E are independent given X.
     """
     # ASSIGN VARIABLES USED THROUGHOUT METHOD
-    X = X.numpy()
-    Y = Y.numpy()
-    E = E.numpy()
+    if not isinstance(X, np.ndarray):
+        X = X.numpy()
+        Y = Y.numpy()
+        E = E.numpy()
     if X.ndim == 1:
         X = X.reshape((len(X), 1))
     if Y.ndim == 1:

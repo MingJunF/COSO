@@ -1,0 +1,184 @@
+[2024-04-17 19:37:08,440][__main__][INFO] - 
+model:
+  dim_treatments: ???
+  dim_vitals: ???
+  dim_static_features: ???
+  dim_outcomes: ???
+  dim_cosovitals: ???
+  dim_abstract_confounders: ???
+  dim_s: ???
+  name: RMSN
+  propensity_treatment:
+    _target_: src.models.rmsn.RMSNPropensityNetworkTreatment
+    seq_hidden_units: 4
+    dropout_rate: 0.1
+    num_layer: 2
+    batch_size: 64
+    max_grad_norm: 2.0
+    optimizer:
+      optimizer_cls: adam
+      learning_rate: 0.01
+      weight_decay: 0.0
+      lr_scheduler: false
+    tune_hparams: false
+    tune_range: 50
+    resources_per_trial: null
+    hparams_grid: null
+  propensity_history:
+    _target_: src.models.rmsn.RMSNPropensityNetworkHistory
+    seq_hidden_units: 144
+    dropout_rate: 0.4
+    num_layer: 2
+    batch_size: 256
+    max_grad_norm: 0.5
+    optimizer:
+      optimizer_cls: adam
+      learning_rate: 0.01
+      weight_decay: 0.0
+      lr_scheduler: false
+    tune_hparams: false
+    tune_range: 50
+    resources_per_trial: null
+    hparams_grid: null
+  encoder:
+    _target_: src.models.rmsn.RMSNEncoder
+    seq_hidden_units: 144
+    dropout_rate: 0.5
+    num_layer: 2
+    batch_size: 256
+    max_grad_norm: 0.5
+    optimizer:
+      optimizer_cls: adam
+      learning_rate: 0.001
+      weight_decay: 0.0
+      lr_scheduler: false
+    tune_hparams: false
+    tune_range: 50
+    resources_per_trial: null
+    hparams_grid: null
+  train_decoder: true
+  decoder:
+    _target_: src.models.rmsn.RMSNDecoder
+    seq_hidden_units: 94
+    dropout_rate: 0.4
+    num_layer: 1
+    batch_size: 512
+    max_grad_norm: 1.0
+    optimizer:
+      optimizer_cls: adam
+      learning_rate: 0.0001
+      weight_decay: 0.0
+      lr_scheduler: false
+    tune_hparams: false
+    tune_range: 20
+    resources_per_trial: null
+dataset:
+  val_batch_size: 512
+  treatment_mode: multilabel
+  _target_: src.data.MIMIC3RealDatasetCollection
+  seed: 10000
+  name: mimic3_real
+  path: data/processed/all_hourly_data.h5
+  min_seq_length: 30
+  max_seq_length: 60
+  max_number: 5000
+  projection_horizon: 5
+  split:
+    val: 0.15
+    test: 0.15
+  autoregressive: true
+  treatment_list:
+  - vaso
+  outcome_list:
+  - diastolic blood pressure
+  vital_list:
+  - heart rate
+  - red blood cell count
+  - sodium
+  - mean blood pressure
+  - systemic vascular resistance
+  - glucose
+  - chloride urine
+  - glascow coma scale total
+  - hematocrit
+  - positive end-expiratory pressure set
+  - respiratory rate
+  - prothrombin time pt
+  - cholesterol
+  - hemoglobin
+  - creatinine
+  - blood urea nitrogen
+  - bicarbonate
+  - calcium ionized
+  - partial pressure of carbon dioxide
+  - magnesium
+  - anion gap
+  - phosphorous
+  - venous pvo2
+  - platelets
+  - calcium urine
+  static_list:
+  - gender
+  - ethnicity
+  - age
+  drop_first: false
+exp:
+  seed: 10000
+  gpus:
+  - 0
+  max_epochs: 200
+  logging: true
+  mlflow_uri: http://127.0.0.1:5000
+  unscale_rmse: true
+  percentage_rmse: false
+  alpha: 1.0
+  update_alpha: false
+  alpha_rate: exp
+  balancing: null
+  bce_weight: false
+  weights_ema: null
+  beta: 0.99
+
+[2024-04-17 19:37:08,450][src.data.mimic_iii.load_data][INFO] - Loading MIMIC-III dataset from D:\Mingjun\COSO/data/processed/all_hourly_data.h5.
+[2024-04-17 19:37:14,168][src.data.mimic_iii.load_data][INFO] - Number of patients filtered: 5000.
+[2024-04-17 19:37:16,267][src.data.mimic_iii.real_dataset][INFO] - Shape of processed train data: {'sequence_lengths': (3500,), 'prev_treatments': (3500, 59, 1), 'vitals': (3500, 59, 25), 'next_vitals': (3500, 58, 25), 'current_treatments': (3500, 59, 1), 'static_features': (3500, 44), 'active_entries': (3500, 59, 1), 'outputs': (3500, 59, 1), 'unscaled_outputs': (3500, 59, 1), 'prev_outputs': (3500, 59, 1), 'coso_vitals': (3500, 59, 24), 'COSO': (3500, 59, 1)}
+[2024-04-17 19:37:16,413][src.data.mimic_iii.real_dataset][INFO] - Shape of processed val data: {'sequence_lengths': (750,), 'prev_treatments': (750, 59, 1), 'vitals': (750, 59, 25), 'next_vitals': (750, 58, 25), 'current_treatments': (750, 59, 1), 'static_features': (750, 44), 'active_entries': (750, 59, 1), 'outputs': (750, 59, 1), 'unscaled_outputs': (750, 59, 1), 'prev_outputs': (750, 59, 1), 'coso_vitals': (750, 59, 24), 'COSO': (750, 59, 1)}
+[2024-04-17 19:37:16,557][src.data.mimic_iii.real_dataset][INFO] - Shape of processed test data: {'sequence_lengths': (750,), 'prev_treatments': (750, 59, 1), 'vitals': (750, 59, 25), 'next_vitals': (750, 58, 25), 'current_treatments': (750, 59, 1), 'static_features': (750, 44), 'active_entries': (750, 59, 1), 'outputs': (750, 59, 1), 'unscaled_outputs': (750, 59, 1), 'prev_outputs': (750, 59, 1), 'coso_vitals': (750, 59, 24), 'COSO': (750, 59, 1)}
+[2024-04-17 19:37:16,591][src.models.rmsn][INFO] - Input size of propensity_treatment: 1
+[2024-04-17 19:47:56,533][src.models.time_varying_model][INFO] - BCE calculation for val.
+[2024-04-17 19:47:56,534][src.models.rmsn][INFO] - Propensity scores for val.
+[2024-04-17 19:47:57,099][__main__][INFO] - Val normalised BCE (all): 0.6494360739864463; Val normalised RMSE (orig): 0.651103799129362
+[2024-04-17 19:47:57,100][src.models.time_varying_model][INFO] - BCE calculation for test.
+[2024-04-17 19:47:57,100][src.models.rmsn][INFO] - Propensity scores for test.
+[2024-04-17 19:47:57,708][__main__][INFO] - Test normalised RMSE (all): 0.6449588972829929; Test normalised RMSE (orig): 0.6435684461617107.
+[2024-04-17 19:47:57,773][src.models.rmsn][INFO] - Input size of propensity_history: 71
+[2024-04-17 19:56:35,892][src.models.time_varying_model][INFO] - BCE calculation for val.
+[2024-04-17 19:56:35,892][src.models.rmsn][INFO] - Propensity scores for val.
+[2024-04-17 19:56:36,562][__main__][INFO] - Val normalised BCE (all): 0.6483457290959341; Val normalised RMSE (orig): 0.650111837671449
+[2024-04-17 19:56:36,563][src.models.time_varying_model][INFO] - BCE calculation for test.
+[2024-04-17 19:56:36,563][src.models.rmsn][INFO] - Propensity scores for test.
+[2024-04-17 19:56:37,226][__main__][INFO] - Test normalised BCE (all): 0.6442605433149902; Test normalised BCE (orig): 0.6427619007250625.
+[2024-04-17 19:56:37,285][src.models.rmsn][INFO] - Input size of encoder: 71
+[2024-04-17 19:56:37,299][src.models.rmsn][INFO] - Propensity scores for train.
+[2024-04-17 19:56:38,042][src.models.rmsn][INFO] - Propensity scores for train.
+[2024-04-17 20:05:42,331][src.models.time_varying_model][INFO] - RMSE calculation for val.
+[2024-04-17 20:05:42,332][src.models.rmsn][INFO] - Predictions for val.
+[2024-04-17 20:05:43,053][__main__][INFO] - Val normalised RMSE (all): 5.15116495117401; Val normalised RMSE (orig): 5.130285414472511
+[2024-04-17 20:05:43,054][src.models.time_varying_model][INFO] - RMSE calculation for test.
+[2024-04-17 20:05:43,054][src.models.rmsn][INFO] - Predictions for test.
+[2024-04-17 20:05:43,840][__main__][INFO] - Test normalised RMSE (all): 4.926654164938574; Test normalised RMSE (orig): 4.952130767297297.
+[2024-04-17 20:05:43,904][src.models.rmsn][INFO] - Input size of decoder: 46
+[2024-04-17 20:05:43,918][src.data.mimic_iii.real_dataset][INFO] - Exploding test dataset before testing (multiple sequences)
+[2024-04-17 20:05:44,317][src.data.mimic_iii.real_dataset][INFO] - Shape of processed test data: {'prev_treatments': (34779, 59, 1), 'current_treatments': (34779, 59, 1), 'static_features': (34779, 44), 'prev_outputs': (34779, 59, 1), 'outputs': (34779, 59, 1), 'vitals': (34779, 59, 25), 'next_vitals': (34779, 58, 25), 'unscaled_outputs': (34779, 59, 1), 'sequence_lengths': (34779,), 'active_entries': (34779, 59, 1)}
+[2024-04-17 20:05:44,318][src.models.rmsn][INFO] - Representations inference for train.
+[2024-04-17 20:05:45,804][src.models.rmsn][INFO] - Representations inference for val.
+[2024-04-17 20:05:46,549][src.models.rmsn][INFO] - Representations inference for test.
+[2024-04-17 20:05:55,029][src.models.rmsn][INFO] - Predictions for test.
+[2024-04-17 20:06:03,833][src.data.mimic_iii.real_dataset][INFO] - Processing train dataset before training (multiple sequences)
+[2024-04-17 20:06:04,998][src.data.mimic_iii.real_dataset][INFO] - Shape of processed train data: {'init_state': (157488, 144), 'original_index': (157488,), 'active_encoder_r': (157488, 59), 'prev_treatments': (157488, 5, 1), 'current_treatments': (157488, 5, 1), 'static_features': (157488, 44), 'prev_outputs': (157488, 5, 1), 'outputs': (157488, 5, 1), 'unscaled_outputs': (157488, 5, 1), 'sequence_lengths': (157488,), 'active_entries': (157488, 5, 1), 'stabilized_weights': (157488, 6)}
+[2024-04-17 20:06:04,999][src.data.mimic_iii.real_dataset][INFO] - Processing val dataset before training (multiple sequences)
+[2024-04-17 20:06:05,220][src.data.mimic_iii.real_dataset][INFO] - Shape of processed val data: {'init_state': (33737, 144), 'original_index': (33737,), 'active_encoder_r': (33737, 59), 'prev_treatments': (33737, 5, 1), 'current_treatments': (33737, 5, 1), 'static_features': (33737, 44), 'prev_outputs': (33737, 5, 1), 'outputs': (33737, 5, 1), 'unscaled_outputs': (33737, 5, 1), 'sequence_lengths': (33737,), 'active_entries': (33737, 5, 1)}
+[2024-04-17 20:06:05,220][src.data.mimic_iii.real_dataset][INFO] - Processing test dataset before testing (multiple sequences)
+[2024-04-17 20:06:05,703][src.data.mimic_iii.real_dataset][INFO] - Shape of processed test data: {'original_index': (34779,), 'active_encoder_r': (34779, 54), 'prev_treatments': (34779, 5, 1), 'current_treatments': (34779, 5, 1), 'static_features': (34779, 44), 'prev_outputs': (34779, 5, 1), 'outputs': (34779, 5, 1), 'unscaled_outputs': (34779, 5, 1), 'sequence_lengths': (34779,), 'active_entries': (34779, 5, 1), 'init_state': (34779, 144)}
+[2024-04-17 20:06:05,708][src.data.mimic_iii.real_dataset][INFO] - Processing test dataset before testing (autoregressive)
+[2024-04-17 20:06:05,858][src.data.mimic_iii.real_dataset][INFO] - Shape of processed test data: {'prev_treatments': (34779, 5, 1), 'current_treatments': (34779, 5, 1), 'prev_outputs': (34779, 5, 1), 'init_state': (34779, 144), 'active_encoder_r': (34779, 54), 'active_entries': (34779, 5, 1), 'static_features': (34779, 44)}

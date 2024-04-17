@@ -1,6 +1,6 @@
 # @package _global_
 dataset:
-  coeff: 0.0
+  coeff: 3.0
 
 model:
   encoder:
@@ -15,13 +15,15 @@ model:
   train_decoder: True
   decoder:
     optimizer:
-      learning_rate: 0.01
-    batch_size: 1024
-    br_size: 18
-    fc_hidden_units: 18
-    dropout_rate: 0.1
+      learning_rate: 0.001
+    batch_size: 512
+    br_size: 3
+    fc_hidden_units: 9
+    dropout_rate: 0.2
 
 exp:
-  weights_ema: False
-  balancing: grad_reverse
-  max_epochs: 200
+  weights_ema: True
+  alpha: 0.01
+  beta: 0.99
+  balancing: domain_confusion
+  max_epochs: 150

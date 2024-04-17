@@ -1,15 +1,11 @@
 # @package _global_
 dataset:
-  _target_: src.data.SyntheticCancerDatasetCollection   # Will be dynamically instantiated
+  _target_: src.data.SyntheticVitalDatasetCollection   # Will be dynamically instantiated
   name: tumor_generator
-  coeff: ???                                            # Confounding coefficient (gamma)
-  chemo_coeff: ${dataset.coeff}                         # Confounding coefficient of chemotherapy
-  radio_coeff: ${dataset.coeff}                         # Confounding coefficient of radiotherapy
   seed: ${exp.seed}
-  num_patients:
-    train: 10000
-    val: 1000
-    test: 1000
+  split:
+    val: 0.15
+    test: 0.15
   window_size: 15                                       # Used for biased treatment assignment
   lag: 0                                                # Lag for treatment assignment window
   max_seq_length: 60                                    # Max length of time series
@@ -17,7 +13,7 @@ dataset:
   cf_seq_mode: sliding_treatment                        # sliding_treatment / random_trajectories
   val_batch_size: 512                                   # Batch size for evaluation
   treatment_mode: multiclass                            # multiclass / multilabel -- for RMSN
-
+  time_step: 30
 model:
   dim_treatments: 4
   dim_vitals: 0

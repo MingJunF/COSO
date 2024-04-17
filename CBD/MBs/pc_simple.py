@@ -11,36 +11,33 @@ from CBD.MBs.common.subsets import subsets
 def pc_simple(data, target, alpha, isdiscrete):
     number, kVar = np.shape(data)
     ciTest = 0
-    k = 0
 
     # Chose all variables except target itself
     PC = [i for i in range(kVar) if i != target]
     # Dictionary to store p-values for variables that remain after the test
     relevant_pvals = {}
 
-    while len(PC) > k:
+    # Create the maximum condition set once for each variable and reuse it
+    condition_sets = {x: [i for i in PC if i != x] for x in PC}
 
-        PC_temp = PC.copy()
-        for x in PC_temp:
-            condition_subsets = [i for i in PC_temp if i != x]
-            print(x)
-            if len(condition_subsets) >= k:
-                css = subsets(condition_subsets, k)
-                for s in css:
-                    pval, dep = cond_indep_test(data, x, target, s, isdiscrete)
-                    ciTest += 1
-                    if pval > alpha:
-                        PC.remove(x)
-                        break  # If variable is independent, it's removed and we stop checking more subsets
-                    else:
-                        # For variables that are not removed, update their p-value
-                        relevant_pvals[x] = pval
-        k += 1
+    PC_temp = PC.copy()
+    for x in PC_temp:
+        condition_set = condition_sets[x]
+        # Since we're using the full set of other variables, there's no need for subsets
+        pval, dep = cond_indep_test(data, x, target, condition_set, isdiscrete)
+        ciTest += 1
+        if pval > alpha:
+            PC.remove(x)
+        else:
+            # For variables that are not removed, update their p-value
+            relevant_pvals[x] = pval
+        #print('relevant_pvals', relevant_pvals)
 
     # Filter the relevant_pvals dictionary to include only those variables that are still in PC
     final_pvals = {var: pval for var, pval in relevant_pvals.items() if var in PC}
 
     return PC, ciTest, final_pvals
+
 
 
 

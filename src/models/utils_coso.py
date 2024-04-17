@@ -3,58 +3,6 @@ import torch.nn as nn
 import numpy as np
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import torch.nn.functional as F
-class AutoRegressiveLSTM(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, dropout_rate=0.3):
-        super(AutoRegressiveLSTM, self).__init__()
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.output_size = output_size
-        self.cell = nn.LSTMCell(self.input_size + self.output_size, self.hidden_size)
-        self.fc = nn.Sequential(nn.Linear(in_features=self.hidden_size,out_features=self.output_size), nn.Tanh())
-        self.dropout_rate = dropout_rate
-
-    def forward(self, inputs, initial_state=None, sequence_lengths=None):
-        if initial_state is None:
-            raise ValueError("Initial state must be provided.")
-
-        time_steps, batch_size, _ = inputs.size()
-        outputs = []
-        h, c, z = initial_state
-
-        # 生成dropout掩码，用于隐藏状态h和细胞状态c
-        dropout_mask_h = torch.bernoulli(torch.full((batch_size, self.hidden_size), 1 - self.dropout_rate)).to(inputs.device) / (1 - self.dropout_rate)
-        dropout_mask_c = torch.bernoulli(torch.full((batch_size, self.hidden_size), 1 - self.dropout_rate)).to(inputs.device) / (1 - self.dropout_rate)
-
-        for t in range(time_steps):
-            combined_input = torch.cat([inputs[t], z], dim=1)
-            h, c = self.cell(combined_input, (h, c))
-            
-            # 应用dropout掩码到隐藏状态h和细胞状态c
-            if self.training:
-                h = h * dropout_mask_h
-                c = c * dropout_mask_c
-
-            # Update z only if the sequence is not completed
-            active = (t < sequence_lengths).float().unsqueeze(1) if sequence_lengths is not None else 1
-            z = self.fc(h) * active
-
-            # 应用dropout到输出z
-            if self.training:
-                out_dropout = torch.bernoulli(torch.full_like(z, 1 - self.dropout_rate)).to(inputs.device) / (1 - self.dropout_rate)
-                z *= out_dropout
-
-            outputs.append(z.unsqueeze(0))
-
-        outputs = torch.cat(outputs, dim=0)  # Concatenate along the time dimension
-        return outputs, (h, c)
-
-
-
-
-
-
-
-
 def compute_sequence_length(sequence):
 
     # 计算每个时间步的最大绝对值，然后判断是否大于0
@@ -188,7 +136,7 @@ class InfoNCE(nn.Module):
         return -self.forward(x_samples, y_samples)
 
 
-class VariationalLSTM(nn.Module):
+class AutoRegressiveLSTM(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, num_layers=1, dropout_rate=0.3, batch_first=True):
         super().__init__()
         self.lstm = nn.LSTM(input_size=input_size+output_size, hidden_size=hidden_size, num_layers=num_layers,
@@ -211,9 +159,8 @@ class VariationalLSTM(nn.Module):
             out_dropout = torch.bernoulli(output_t.data.new(output_t.data.size()).fill_(1 - self.dropout_rate)) / (1 - self.dropout_rate)
         for t in range(seq_len):
             # 只对序列的非填充部分生成输出
-            effective_batch = (sequence_length.unsqueeze(1) > t).float().to(device)
-            effective_batch = effective_batch.unsqueeze(-1)
-
+            effective_batch = (sequence_length > t).float().to(device)
+            effective_batch = effective_batch.unsqueeze(-1)       
             lstm_input = torch.cat((x[:, t:t+1, :] * effective_batch, output_t), dim=-1)
 
             # LSTM前向传播

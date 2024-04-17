@@ -39,7 +39,9 @@ def main(args: DictConfig):
     args.model.dim_treatments = dataset_collection.train_f.data['current_treatments'].shape[-1]
     args.model.dim_vitals = dataset_collection.train_f.data['vitals'].shape[-1] if dataset_collection.has_vitals else 0
     args.model.dim_static_features = dataset_collection.train_f.data['static_features'].shape[-1]
-
+    args.model.dim_cosovitals = dataset_collection.train_f.data['coso_vitals'].shape[-1] if dataset_collection.has_vitals else 0
+    args.model.dim_abstract_confounders = 10
+    args.model.dim_s = dataset_collection.train_f.data['COSO'].shape[-1]
     # MlFlow Logger
     if args.exp.logging:
         experiment_name = f'{args.model.name}/{args.dataset.name}'

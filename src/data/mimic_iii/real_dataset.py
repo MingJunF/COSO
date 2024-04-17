@@ -64,6 +64,7 @@ class MIMIC3RealDataset(Dataset):
         static_features = static_features.values
         user_sizes = user_sizes.values
         coso_vitals = coso_vitals.fillna(0.0).values.reshape((len(user_sizes), max(user_sizes), -1))
+
         COSO = coso_vitals[:, :, COSO_index, np.newaxis]
         coso_vitals = np.delete(coso_vitals, COSO_index, axis=2)
 
@@ -548,8 +549,8 @@ class MIMIC3RealDatasetCollection(RealDatasetCollection):
         active_entries_np = active_entries.values.reshape((len(user_sizes), max(user_sizes), 1))
 
         # 现在，treatments_np, outcomes_np, coso_vitals_np, 和 active_entries_np 都已准备好，可以被传递到 find_S_variable 函数中
-        COSO_index = find_S_variable(treatments_np, outcomes_np, coso_vitals_np, active_entries_np)
-
+        #COSO_index = find_S_variable(treatments_np, outcomes_np, coso_vitals_np, active_entries_np)
+        COSO_index=8
         if split['val'] > 0.0:
             static_features_train, static_features_val = train_test_split(static_features,
                                                                         test_size=split['val'] / (1 - split['test']),
@@ -593,7 +594,7 @@ def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
     patient=0
     # 遍历所有患者
     for patient in range(num_patients):
-        if patient >500:
+        if patient >5000:
             break
         else:
             # 遍历所有时间步
@@ -609,10 +610,8 @@ def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
                     data_for_analysis = np.hstack([features, current_treatment, current_outcome]).reshape(1, -1)
                     all_data_for_analysis.append(data_for_analysis)
         patient = patient + 1
-
     # 将数据列表转换为 Tensor，并将数据类型转换为 float
     all_data_tensor = torch.tensor(all_data_for_analysis, dtype=torch.float)
-
     # 提取协变量和结果
     covariates_tensor = all_data_tensor[:, 0, :num_covariates]
     treatments_tensor = all_data_tensor[:, 0, num_covariates:num_covariates + 1]
@@ -620,14 +619,19 @@ def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
     # 拼接数据并重新整形
     concatenated_data_oucome = torch.cat([covariates_tensor, outcomes_tensor], -1)
     concatenated_data_treatment = torch.cat([covariates_tensor, treatments_tensor], -1)
+    _, _, treatment_pvals = pc_simple(concatenated_data_treatment, target=num_covariates, alpha=0.05, isdiscrete=False)
+    #print('treatment_pvals',treatment_pvals)
+    
+    _, _, outcome_pvals = pc_simple(concatenated_data_oucome, target=num_covariates, alpha=0.05, isdiscrete=False)
+    #print('outcome_pvals',outcome_pvals)
 
-    _, _, treatment_pvals = pc_simple(concatenated_data_oucome, target=num_covariates, alpha=0.05, isdiscrete=True)
-    print('treatment_pvals',treatment_pvals)
-    _, _, outcome_pvals = pc_simple(concatenated_data_treatment, target=num_covariates, alpha=0.05, isdiscrete=False)
-    print('outcome_pvals',outcome_pvals)
+
     treatment_related_vars = {var for var, pval in treatment_pvals.items() if pval <= 0.05}
-    outcome_unrelated_vars = {var for var, pval in outcome_pvals.items() if pval > 0.05}
+    print(treatment_pvals)
+    outcome_unrelated_vars = {var for var, pval in outcome_pvals.items() if pval <= 0.05}
+    print(outcome_pvals)
     relevant_vars = treatment_related_vars.difference(outcome_unrelated_vars)
+    print(relevant_vars)
     if relevant_vars:
         min_pval = float('inf')
         most_relevant_var = None
@@ -636,7 +640,6 @@ def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
                 min_pval = treatment_pvals[var]
                 most_relevant_var = var
         most_relevant_var_for_each_patient = most_relevant_var
-    print('most_relevant_var_for_each_patient',most_relevant_var_for_each_patient)
 
 
     return most_relevant_var_for_each_patient

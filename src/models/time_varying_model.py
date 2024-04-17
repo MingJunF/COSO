@@ -109,6 +109,9 @@ class TimeVaryingCausalModel(LightningModule):
         self.dim_vitals = args.model.dim_vitals
         self.dim_static_features = args.model.dim_static_features
         self.dim_outcome = args.model.dim_outcomes
+        self.dim_cosovitals = args.model.dim_cosovitals
+        self.dim_abstract_confounders = args.model.dim_abstract_confounders
+        self.dim_s = args.model.dim_s
 
         self.input_size = None  # Will be defined in subclasses
 
