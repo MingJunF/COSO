@@ -12,12 +12,12 @@ import numpy as np
 import pandas as pd
 class AutoregressiveSimulation:
     def __init__(self, gamma, num_simulated_hidden_confounders):
-        self.num_covariates = 3
+        self.num_covariates = 5
         self.num_confounders = num_simulated_hidden_confounders
         self.num_treatments = 1
         self.p = 5
 
-        self.gamma_a = gamma
+        self.gamma_a = 0.5
         self.gamma_y = 0
 
         self.covariates_coefficients = dict()

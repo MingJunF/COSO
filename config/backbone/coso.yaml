@@ -16,36 +16,10 @@ model:
       weight_decay: 0.0
       lr_scheduler: False
 
-    tune_hparams: True                # Hparam tuning
+    tune_hparams: False                # Hparam tuning
     tune_range: 1
     hparams_grid:
-      num_layer:
-        - 1
-      learning_rate:
-        - 0.001
-      batch_size:
-        - 64
-        - 128
-        - 256
-      seq_hidden_units:
-        - 0.5
-        - 1.0
-        - 2.0
-        - 3.0
-        - 4.0
-      br_size:
-        - 1.0
-      fc_hidden_units:
-        - 1.0
-      dropout_rate:
-        - 0.1
-        - 0.2
-        - 0.3
-        - 0.4
-        - 0.5
     resources_per_trial:
-      cpu: 0.4
-      gpu: 0.2
 
   encoder:                              # Missing hyperparameters are to be filled in command line / with tune_hparams = True / selected with +backbone/crn_hparams=...
     _target_: src.models.coso.CRNEncoder
