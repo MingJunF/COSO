@@ -240,7 +240,9 @@ class COSO(CRN):
         hidden_confounders = lstm_output_confounder.view(-1, self.dim_abstract_confounders)
         return lstm_output_confounder,hidden_confounders
     
-    def training_step(self, batch, batch_ind):
+    def training_step(self, batch, batch_ind, optimizer_idx=None):
+        for par in self.parameters():
+            par.requires_grad = True
         _ , confounders = self(batch)
         S =  batch['COSO'].reshape(-1, self.dim_s)
         treatment_targets = batch['current_treatments'].reshape(-1, self.dim_treatments)
@@ -254,9 +256,10 @@ class COSO(CRN):
         loss_b = self.term_b(torch.cat([confounders, treatment_targets], dim=-1), outcome,mask=flat_mask)
         loss_S = self.term_S(torch.cat([confounders, treatment_targets,S], dim=-1), torch.cat([confounders, treatment_targets, outcome], dim=-1),mask=flat_mask)
 
-        train_loss = loss_a+loss_b+loss_S
+        train_loss = loss_a+loss_b+0.9*loss_S
         self.log(f'{self.model_type}_train_loss', train_loss, on_epoch=True, on_step=False, sync_dist=True)
         return train_loss
+
     def process_full_dataset(self, batch, batch_size=32):
         # 创建数据加载器
         data_loader = DataLoader(batch, batch_size=batch_size, shuffle=False)

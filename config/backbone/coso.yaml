@@ -1,6 +1,6 @@
 # @package _global_
 model:
-  name: CRN
+  name: COSO
   COSO:                              # Missing hyperparameters are to be filled in command line / with tune_hparams = True / selected with +backbone/crn_hparams=...
     _target_: src.models.coso.COSO
     seq_hidden_units:                   # rnn_hidden_units in the original terminology

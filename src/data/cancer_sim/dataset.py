@@ -485,7 +485,7 @@ class SyntheticVitalDatasetCollection(RealDatasetCollection):
         """
         super(SyntheticVitalDatasetCollection, self).__init__()
         self.seed = seed
-        autoregressive = AutoregressiveSimulation(0.6, 5)
+        autoregressive = AutoregressiveSimulation(1, 5)
         treatments, outcomes, vitals, static_features, outcomes_unscaled, scaling_params, coso_vitals = \
             autoregressive.generate_dataset(500, 31)
         

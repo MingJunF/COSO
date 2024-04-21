@@ -58,7 +58,7 @@ class CRN(BRCausalModel):
             self.fc_hidden_units = sub_args.fc_hidden_units
             self.dropout_rate = sub_args.dropout_rate
             self.num_layer = sub_args.num_layer
-            self.batch_size = sub_args.batch_size
+
             # Pytorch model init
             if self.seq_hidden_units is None or self.br_size is None or self.fc_hidden_units is None or self.dropout_rate is None:
                 raise MissingMandatoryValue()
@@ -100,8 +100,6 @@ class CRN(BRCausalModel):
         return br
 
 
-
-
 class CRNEncoder(CRN):
 
     model_type = 'encoder'
@@ -136,8 +134,6 @@ class CRNEncoder(CRN):
         static_features = batch['static_features']
         curr_treatments = batch['current_treatments']
         init_states = None  # None for encoder
-        #logger.info(f"Dimension of treatment:{curr_treatments}")
-        #logger.info(f"Dimension of outcome:{batch['prev_outputs'].shape}")
 
         br = self.build_br(prev_treatments, vitals_or_prev_outputs, static_features, init_states)
         treatment_pred = self.br_treatment_outcome_head.build_treatment(br, detach_treatment)
@@ -184,43 +180,3 @@ class CRNDecoder(CRN):
         outcome_pred = self.br_treatment_outcome_head.build_outcome(br, curr_treatments)
 
         return treatment_pred, outcome_pred, br
-class COSO(CRN):
-    model_type = 'COSO'
-    def __init__(self, args: DictConfig,
-                 dataset_collection: Union[RealDatasetCollection, SyntheticDatasetCollection] = None,
-                 autoregressive: bool = None,
-                 has_vitals: bool = None,
-                 bce_weights: np.array = None,
-                 **kwargs):
-        super().__init__(args, dataset_collection, autoregressive, has_vitals, bce_weights)
-        self._init_specific(args.model.coso)
-    def trainable_init_h_confounder(self):
-        h0 = torch.zeros(1, self.batch_size,self.seq_hidden_units)
-        c0 = torch.zeros(1,self.batch_size, self.seq_hidden_units)
-        z0 = torch.zeros(self.batch_size,1 ,self.num_confounders)
-        trainable_h0 = nn.Parameter(h0, requires_grad=True)
-        trainable_c0 = nn.Parameter(c0, requires_grad=True)
-        trainable_z0 = nn.Parameter(z0, requires_grad=True)
-        return trainable_h0, trainable_c0, trainable_z0
-
-
-    def forward(self, previous_covariates, previous_treatments, current_covariates):
-        batch_size = previous_covariates.size(0)
-        lstm_input_confounder = torch.cat([current_covariates], dim=1)
-        lstm_input_confounder = lstm_input_confounder.float()
-        sequence_lengths=compute_sequence_length(lstm_input_confounder)
-        hn = self.trainable_h0_confounder[:, :batch_size, :].contiguous()
-        cn = self.trainable_c0_confounder[:, :batch_size, :].contiguous()
-        zn = self.trainable_z0_confounder[:batch_size, :, :].contiguous()
-        lstm_output_confounder = self.lstm_confounder(lstm_input_confounder, sequence_length=sequence_lengths, initial_state=(hn, cn, zn))
-        # Definition of confounders
-        hidden_confounders = lstm_output_confounder.view(-1, self.num_confounders)
-        #current_covariates = current_covariates.reshape(-1, self.num_covariates).float()
-
-        #multitask_input_confounder = torch.cat([hidden_confounders, current_covariates], dim=-1).float()
-        #confounder_pred_treatments = []
-        #for treatment in range(self.num_treatments):
-            #confounder_pred_treatments.append(self.confounder_decoders[treatment](multitask_input_confounder))
-        #confounder_pred_treatments = torch.cat(confounder_pred_treatments, dim=-1).float()
-
-        return hidden_confounders,sequence_lengths,lstm_input_confounder    

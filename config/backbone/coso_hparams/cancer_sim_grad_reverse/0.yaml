@@ -3,6 +3,14 @@ dataset:
   coeff: 0.0
 
 model:
+  COSO:
+    optimizer:
+      learning_rate: 0.001
+    batch_size: 32
+    seq_hidden_units: 128
+    br_size: 3
+    fc_hidden_units: 6
+    dropout_rate: 0.1
   encoder:
     optimizer:
       learning_rate: 0.001

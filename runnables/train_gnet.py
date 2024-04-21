@@ -13,7 +13,7 @@ from src.models.utils import AlphaRise, FilteringMlFlowLogger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 torch.set_default_dtype(torch.double)
-print(torch.cuda.is_available())
+
 
 @hydra.main(config_name=f'config.yaml', config_path='../config/')
 def main(args: DictConfig):
@@ -41,7 +41,7 @@ def main(args: DictConfig):
     args.model.dim_vitals = dataset_collection.train_f.data['vitals'].shape[-1] if dataset_collection.has_vitals else 0
     args.model.dim_static_features = dataset_collection.train_f.data['static_features'].shape[-1]
     args.model.dim_cosovitals = dataset_collection.train_f.data['coso_vitals'].shape[-1] if dataset_collection.has_vitals else 0
-    args.model.dim_abstract_confounders = 10
+    args.model.dim_abstract_confounders = 21
     args.model.dim_s = dataset_collection.train_f.data['COSO'].shape[-1]
     # Conditional networks outputs are of uniform dim between (dim_outcomes + dim_vitals)
     args.model.g_net.comp_sizes = \
@@ -103,7 +103,7 @@ def main(args: DictConfig):
         test_rmses = model.get_normalised_n_step_rmses(dataset_collection.test_cf_treatment_seq,
                                                        dataset_collection.test_cf_treatment_seq_mc)
     elif hasattr(dataset_collection, 'test_f_mc'):  # Test n_step_factual rmse
-        test_rmses = model.get_normalised_n_step_rmses(dataset_collection.test_f, dataset_collection.test_f_mc)
+        test_rmses = model.get_normalised_n_step_rmses(dataset_collection.test_f_multi, dataset_collection.test_f_mc)
 
     test_rmses = {f'{k+2}-step': v for (k, v) in enumerate(test_rmses)}
 
