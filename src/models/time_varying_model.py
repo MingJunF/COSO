@@ -301,7 +301,6 @@ class TimeVaryingCausalModel(LightningModule):
         logger.info(f"Running hyperparameters selection with {sub_args['tune_range']} trials")
         ray.init(num_gpus=len(eval(str(self.hparams.exp.gpus))), num_cpus=4, include_dashboard=False,
                  _redis_max_memory=ray_constants.FUNCTION_SIZE_ERROR_THRESHOLD)
-
         hparams_grid = {k: tune.choice(v) for k, v in sub_args['hparams_grid'].items()}
         analysis = tune.run(tune.with_parameters(train_eval_factual,
                                                  input_size=self.input_size,
@@ -325,6 +324,8 @@ class TimeVaryingCausalModel(LightningModule):
         ray.shutdown()
 
         logger.info(f"Best hyperparameters found: {analysis.best_config}.")
+        with open('best_hyperparameters.txt', 'w') as file:
+            file.write(f"Best hyperparameters found: {analysis.best_config}\n")
         logger.info("Resetting current hyperparameters to best values.")
         self.set_hparams(self.hparams.model, analysis.best_config, self.input_size, self.model_type)
 

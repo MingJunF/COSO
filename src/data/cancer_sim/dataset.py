@@ -62,7 +62,6 @@ class MIMIC3RealDataset(Dataset):
             'coso_vitals': coso_vitals[:, 1:, :],
             'COSO': COSO[:, 1:, :]
         }
-        print(np.sum(active_entries.squeeze(), axis=1))
         self.scaling_params = scaling_params
         self.processed = True
         self.processed_sequential = False
@@ -527,7 +526,6 @@ class SyntheticVitalDatasetCollection(RealDatasetCollection):
         active_entries = np.isnan(treatments).any(axis=2) == False
         active_entries = active_entries.astype(float)[:, :, np.newaxis]  # Ensure it is 3D and float type  
         COSO_index = find_S_variable(treatments, outcomes, coso_vitals, active_entries)
-        print(treatments_train.shape)
         self.train_f = MIMIC3RealDataset(treatments_train, outcomes_train, vitals_train, static_features_train, outcomes_unscaled_train, scaling_params, 'train', coso_vitals_train,COSO_index)
         if split['val'] > 0.0:
             self.val_f = MIMIC3RealDataset(treatments_val, outcomes_val, vitals_val, static_features_val, outcomes_unscaled_val, scaling_params, 'val', coso_vitals_val,COSO_index)

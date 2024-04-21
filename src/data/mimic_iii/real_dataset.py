@@ -627,11 +627,11 @@ def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
 
 
     treatment_related_vars = {var for var, pval in treatment_pvals.items() if pval <= 0.05}
-    print(treatment_pvals)
+    #print(treatment_pvals)
     outcome_unrelated_vars = {var for var, pval in outcome_pvals.items() if pval <= 0.05}
-    print(outcome_pvals)
+    #print(outcome_pvals)
     relevant_vars = treatment_related_vars.difference(outcome_unrelated_vars)
-    print(relevant_vars)
+    #print(relevant_vars)
     if relevant_vars:
         min_pval = float('inf')
         most_relevant_var = None

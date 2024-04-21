@@ -76,6 +76,7 @@ class SyntheticDatasetCollection:
         Used by CT
         """
         self.train_f.process_data(self.train_scaling_params)
+        assert hasattr(self.train_f, 'data_processed_seq')
         if hasattr(self, 'val_f') and self.val_f is not None:
             self.val_f.process_data(self.train_scaling_params)
         self.test_cf_one_step.process_data(self.train_scaling_params)
@@ -201,5 +202,5 @@ class RealDatasetCollection:
             self.test_f_mc = []
             for m in range(mc_samples):
                 logger.info(f'Exploding test_f {mc_samples} times')
-                self.test_f_mc.append(self.test_f)
-                self.test_f_mc[m].data = deepcopy(self.test_f.data)
+                self.test_f_mc.append(self.test_f_multi)
+                self.test_f_mc[m].data = deepcopy(self.test_f_multi.data)

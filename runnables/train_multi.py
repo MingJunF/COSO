@@ -45,7 +45,6 @@ def main(args: DictConfig):
     args.model.dim_s = dataset_collection.train_f.data['COSO'].shape[-1]
     # Train_callbacks
     multimodel_callbacks = [AlphaRise(rate=args.exp.alpha_rate)]
-
     # MlFlow Logger
     if args.exp.logging:
         experiment_name = f'{args.model.name}/{args.dataset.name}'
@@ -64,8 +63,8 @@ def main(args: DictConfig):
     multimodel_trainer = Trainer(gpus=eval(str(args.exp.gpus)), logger=mlf_logger, max_epochs=args.exp.max_epochs,
                                  callbacks=multimodel_callbacks, terminate_on_nan=True,
                                  gradient_clip_val=args.model.multi.max_grad_norm)
+    assert hasattr(dataset_collection.test_f, 'data_processed_seq')
     multimodel_trainer.fit(multimodel)
-
     # Validation factual rmse
     val_dataloader = DataLoader(dataset_collection.val_f, batch_size=args.dataset.val_batch_size, shuffle=False)
     multimodel_trainer.test(multimodel, test_dataloaders=val_dataloader)

@@ -1,0 +1,3 @@
+- +dataset=cancer_sim
+- +backbone=ct
+- +backbone/ct_hparams/cancer_sim_domain_conf='0'

@@ -15,10 +15,46 @@ model:
       weight_decay: 0.0
       lr_scheduler: False
 
-    tune_hparams: False                 # Hparam tuning
-    tune_range: 50
+    tune_hparams: True                 # Hparam tuning
+    tune_range: 2
     hparams_grid:
+      num_layer:
+        - 1
+      learning_rate:
+        - 0.01
+        - 0.001
+        - 0.0001
+      batch_size:
+        - 64
+        - 128
+        - 256
+      seq_hidden_units:
+        - 0.5
+        - 1.0
+        - 2.0
+        - 3.0
+        - 4.0
+      br_size:
+        - 0.5
+        - 1.0
+        - 2.0
+        - 3.0
+        - 4.0
+      fc_hidden_units:
+        - 0.5
+        - 1.0
+        - 2.0
+        - 3.0
+        - 4.0
+      dropout_rate:
+        - 0.1
+        - 0.2
+        - 0.3
+        - 0.4
+        - 0.5
     resources_per_trial:
+      cpu: 0.4
+      gpu: 0.2
 
   train_decoder: False
   decoder:                                # Missing hyperparameters are to be filled in command line / with tune_hparams = True / selected with +backbone/crn_hparams=...
@@ -35,10 +71,40 @@ model:
       weight_decay: 0.0
       lr_scheduler: False
 
-    tune_hparams: False                   # Hparam tuning
-    tune_range: 30
+    tune_hparams: True                   # Hparam tuning
+    tune_range: 2
     hparams_grid:
+      num_layer:
+        - 1
+      learning_rate:
+        - 0.01
+        - 0.001
+        - 0.0001
+      batch_size:
+        - 256
+        - 512
+        - 1024
+      br_size:
+        - 0.5
+        - 1.0
+        - 2.0
+        - 3.0
+        - 4.0
+      fc_hidden_units:
+        - 0.5
+        - 1.0
+        - 2.0
+        - 3.0
+        - 4.0
+      dropout_rate:
+        - 0.1
+        - 0.2
+        - 0.3
+        - 0.4
+        - 0.5
     resources_per_trial:
+      cpu: 0.5
+      gpu: 0.2
 
 exp:
   weights_ema: False

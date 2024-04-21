@@ -25,4 +25,4 @@ model:
 exp:
   weights_ema: False
   balancing: grad_reverse
-  max_epochs: 200
+  max_epochs: 1

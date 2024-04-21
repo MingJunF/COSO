@@ -12,3 +12,6 @@ model:
     fc_hidden_units: 48
     dropout_rate: 0.1
     r_size: 3
+exp:
+  weights_ema: False
+  balancing: grad_reverse

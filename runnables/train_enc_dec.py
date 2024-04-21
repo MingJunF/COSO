@@ -35,17 +35,17 @@ def main(args: DictConfig):
     # Initialisation of data
     seed_everything(args.exp.seed)
     dataset_collection = instantiate(args.dataset, _recursive_=True)
+
     dataset_collection.process_data_encoder()
     args.model.dim_outcomes = dataset_collection.train_f.data['outputs'].shape[-1]
     args.model.dim_treatments = dataset_collection.train_f.data['current_treatments'].shape[-1]
     args.model.dim_vitals = dataset_collection.train_f.data['vitals'].shape[-1] if dataset_collection.has_vitals else 0
     args.model.dim_static_features = dataset_collection.train_f.data['static_features'].shape[-1]
     args.model.dim_cosovitals = dataset_collection.train_f.data['coso_vitals'].shape[-1] if dataset_collection.has_vitals else 0
-    args.model.dim_abstract_confounders = 10
+    args.model.dim_abstract_confounders = 21
     args.model.dim_s = dataset_collection.train_f.data['COSO'].shape[-1]
     # Train_callbacks
     encoder_callbacks, decoder_callbacks = [AlphaRise(rate=args.exp.alpha_rate)], [AlphaRise(rate=args.exp.alpha_rate)]
-
     # MlFlow Logger
     if args.exp.logging:
         experiment_name = f'{args.model.name}/{args.dataset.name}'
@@ -106,7 +106,6 @@ def main(args: DictConfig):
         if args.exp.logging:
             mlf_logger.filter_submodel = 'encoder'  # Disable Logging to Mlflow
         decoder = instantiate(args.model.decoder, args, encoder, dataset_collection, _recursive_=False)
-
         if args.model.decoder.tune_hparams:
             decoder.finetune(resources_per_trial=args.model.decoder.resources_per_trial)
 
