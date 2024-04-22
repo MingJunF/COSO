@@ -32,6 +32,7 @@ def main(args: DictConfig):
     OmegaConf.register_new_resolver("sum", lambda x, y: x + y, replace=True)
     logger.info('\n' + OmegaConf.to_yaml(args, resolve=True))
 
+
     # Initialisation of data
     seed_everything(args.exp.seed)
     dataset_collection = instantiate(args.dataset, _recursive_=True)
@@ -54,7 +55,6 @@ def main(args: DictConfig):
     else:
         mlf_logger = None
         artifacts_path = None
-
     # ============================== Initialisation & Training of multimodel ==============================
     multimodel = instantiate(args.model.multi, args, dataset_collection, _recursive_=False)
     if args.model.multi.tune_hparams:
@@ -63,7 +63,6 @@ def main(args: DictConfig):
     multimodel_trainer = Trainer(gpus=eval(str(args.exp.gpus)), logger=mlf_logger, max_epochs=args.exp.max_epochs,
                                  callbacks=multimodel_callbacks, terminate_on_nan=True,
                                  gradient_clip_val=args.model.multi.max_grad_norm)
-    assert hasattr(dataset_collection.test_f, 'data_processed_seq')
     multimodel_trainer.fit(multimodel)
     # Validation factual rmse
     val_dataloader = DataLoader(dataset_collection.val_f, batch_size=args.dataset.val_batch_size, shuffle=False)

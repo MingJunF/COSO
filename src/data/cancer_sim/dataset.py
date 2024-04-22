@@ -486,7 +486,7 @@ class SyntheticVitalDatasetCollection(RealDatasetCollection):
         self.seed = seed
         autoregressive = AutoregressiveSimulation(1, 5)
         treatments, outcomes, vitals, static_features, outcomes_unscaled, scaling_params, coso_vitals = \
-            autoregressive.generate_dataset(5000, 31)
+            autoregressive.generate_dataset(5000, 30)
         
         indices = np.arange(static_features.shape[0])
         train_indices, test_indices = train_test_split(indices, test_size=split['test'], random_state=seed)
@@ -525,8 +525,8 @@ class SyntheticVitalDatasetCollection(RealDatasetCollection):
             static_features_val = static_features[val_indices]
         active_entries = np.isnan(treatments).any(axis=2) == False
         active_entries = active_entries.astype(float)[:, :, np.newaxis]  # Ensure it is 3D and float type  
-        #COSO_index = find_S_variable(treatments, outcomes, coso_vitals, active_entries)
-        COSO_index=8
+        #COSO_index = find_S_variable(treatments, outcomes_unscaled, coso_vitals, active_entries)
+        COSO_index = 0
         self.train_f = MIMIC3RealDataset(treatments_train, outcomes_train, vitals_train, static_features_train, outcomes_unscaled_train, scaling_params, 'train', coso_vitals_train,COSO_index)
         if split['val'] > 0.0:
             self.val_f = MIMIC3RealDataset(treatments_val, outcomes_val, vitals_val, static_features_val, outcomes_unscaled_val, scaling_params, 'val', coso_vitals_val,COSO_index)
@@ -581,9 +581,9 @@ def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
 
 
     treatment_related_vars = {var for var, pval in treatment_pvals.items() if pval <= 0.05}
-    print(treatment_related_vars)
-    outcome_related_vars = {var for var, pval in outcome_pvals.items() if pval > 0.05}
-    print(outcome_related_vars)
+    print(treatment_pvals)
+    outcome_related_vars = {var for var, pval in outcome_pvals.items() if pval <= 0.05}
+    print(outcome_pvals)
     relevant_vars = treatment_related_vars.difference(outcome_related_vars)
     print(relevant_vars)
     if relevant_vars:

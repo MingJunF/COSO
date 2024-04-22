@@ -40,7 +40,7 @@ class AutoregressiveSimulation:
     def generate_treatment_coefficients(self):
         treatment_coefficients = np.zeros(shape=(self.num_treatments, self.num_covariates + self.num_confounders))
         for treatment in range(self.num_treatments):
-            treatment_coefficients[treatment][treatment] = 1.0 - self.gamma_a
+            treatment_coefficients[treatment][treatment] = 1-self.gamma_a
             treatment_coefficients[treatment][self.num_covariates] = self.gamma_a
 
         return treatment_coefficients
@@ -221,7 +221,7 @@ class AutoregressiveSimulation:
             covariates_history, confounders_history, treatments_history = self.generate_data_single_patient(timesteps + 1)
 
             # 合并covariates和confounders历史，使混杂因子作为共变量的一部分
-            combined_history = np.concatenate((covariates_history, confounders_history), axis=-1)
+            combined_history = np.concatenate((confounders_history,covariates_history), axis=-1)
             if timesteps - 1 < max_timesteps:
                 padding_length = max_timesteps - timesteps
                 previous_covariates = np.vstack((combined_history[1:timesteps], np.full((padding_length, self.num_covariates + self.num_confounders), np.nan)))
@@ -235,8 +235,8 @@ class AutoregressiveSimulation:
                 previous_treatments = treatments_history[1:timesteps]
                 covariates = combined_history[1:timesteps]
                 treatments = treatments_history[1:timesteps]
-
-            outcomes = self.gamma_y * np.mean(confounders_history[2:timesteps + 1], axis=-1) + (1 - self.gamma_y) * np.mean(covariates_history[2:timesteps + 1], axis=-1)
+        
+            outcomes = np.mean(covariates_history[2:timesteps + 1], axis=-1)
             outcomes = outcomes[:, np.newaxis]
             outcomes = np.vstack((outcomes, np.full((padding_length, 1), np.nan)))
             dataset['previous_covariates'].append(previous_covariates)
@@ -248,67 +248,12 @@ class AutoregressiveSimulation:
 
         for key in dataset.keys():
             dataset[key] = np.array(dataset[key])
-
         # 计算 scaling parameters
         mean_outcome = np.mean(dataset['outcomes'][~np.isnan(dataset['outcomes'])])
         std_outcome = np.std(dataset['outcomes'][~np.isnan(dataset['outcomes'])])
         scaling_params = {'output_means': mean_outcome, 'output_stds': std_outcome}
         dataset['outcomes_scaled'] = (dataset['outcomes'] - mean_outcome) / std_outcome  # 标准化结果
         static_features = np.random.rand(num_patients, 1)  # Assuming a single static feature for simplicity
-        return  dataset['treatments'], dataset['outcomes_scaled'], dataset['covariates'], static_features, dataset['outcomes'], scaling_params, dataset['covariates']
-    def generate_dataset_backup(self, num_patients, max_timesteps):
-        dataset = dict()
-
-        dataset['previous_covariates'] = []
-        dataset['previous_treatments'] = []
-        dataset['covariates'] = []
-        # 移除confounders的独立列表，将其合并到covariates中
-        dataset['treatments'] = []
-        dataset['sequence_length'] = []
-        dataset['outcomes'] = []
-
-        for patient in range(num_patients):
-            timesteps = np.random.randint(int(max_timesteps)-10, int(max_timesteps), 1)[0]
-            covariates_history, confounders_history, treatments_history = self.generate_data_single_patient(
-                timesteps + 1)
-
-            # 合并covariates和confounders历史，使混杂因子作为共变量的一部分
-            combined_history = np.concatenate((covariates_history, confounders_history), axis=-1)
-
-            previous_covariates = np.vstack((combined_history[1:timesteps - 1],
-                                            np.zeros(shape=(max_timesteps-timesteps, self.num_covariates + self.num_confounders))))
-            previous_treatments = np.vstack((treatments_history[1:timesteps - 1],
-                                            np.zeros(shape=(max_timesteps-timesteps, self.num_treatments))))
-
-            covariates = np.vstack((combined_history[1:timesteps],
-                                    np.zeros(shape=(max_timesteps - timesteps, self.num_covariates + self.num_confounders))))
-
-            treatments = np.vstack((treatments_history[1:timesteps],
-                                    np.zeros(shape=(max_timesteps-timesteps, self.num_treatments))))
-
-            outcomes = self.gamma_y * np.mean(confounders_history[2:timesteps + 1], axis=-1) + \
-                    (1-self.gamma_y) * np.mean(covariates_history[2:timesteps + 1], axis=-1)
-
-            outcomes = outcomes[:, np.newaxis]
-            outcomes = np.vstack((outcomes,
-                                np.zeros(shape=(max_timesteps-timesteps, 1))))
-
-            dataset['previous_covariates'].append(previous_covariates)
-            dataset['previous_treatments'].append(previous_treatments)
-            dataset['covariates'].append(covariates)
-            dataset['treatments'].append(treatments)
-            dataset['sequence_length'].append(timesteps)
-            dataset['outcomes'].append(outcomes)
-
-        for key in dataset.keys():
-            dataset[key] = np.array(dataset[key])
-
-        # 计算 scaling parameters
-        mean_outcome = np.mean(dataset['outcomes'])
-        std_outcome = np.std(dataset['outcomes'])
-        scaling_params = {'output_means': mean_outcome, 'output_stds': std_outcome}
-        dataset['outcomes_scaled'] = (dataset['outcomes'] - mean_outcome) / std_outcome  # 标准化结果
-        static_features = np.random.rand(num_patients, 1) 
         return  dataset['treatments'], dataset['outcomes_scaled'], dataset['covariates'], static_features, dataset['outcomes'], scaling_params, dataset['covariates']
 
 

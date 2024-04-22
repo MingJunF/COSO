@@ -549,8 +549,7 @@ class MIMIC3RealDatasetCollection(RealDatasetCollection):
         active_entries_np = active_entries.values.reshape((len(user_sizes), max(user_sizes), 1))
 
         # 现在，treatments_np, outcomes_np, coso_vitals_np, 和 active_entries_np 都已准备好，可以被传递到 find_S_variable 函数中
-        #COSO_index = find_S_variable(treatments_np, outcomes_np, coso_vitals_np, active_entries_np)
-        COSO_index=8
+        COSO_index = find_S_variable(treatments_np, outcomes_np, coso_vitals_np, active_entries_np)
         if split['val'] > 0.0:
             static_features_train, static_features_val = train_test_split(static_features,
                                                                         test_size=split['val'] / (1 - split['test']),
@@ -627,11 +626,11 @@ def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
 
 
     treatment_related_vars = {var for var, pval in treatment_pvals.items() if pval <= 0.05}
-    #print(treatment_pvals)
+    print(treatment_pvals)
     outcome_unrelated_vars = {var for var, pval in outcome_pvals.items() if pval <= 0.05}
-    #print(outcome_pvals)
+    print(outcome_pvals)
     relevant_vars = treatment_related_vars.difference(outcome_unrelated_vars)
-    #print(relevant_vars)
+    print(relevant_vars)
     if relevant_vars:
         min_pval = float('inf')
         most_relevant_var = None

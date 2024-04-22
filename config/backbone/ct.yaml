@@ -27,8 +27,8 @@ model:
 
     augment_with_masked_vitals: True
 
-    tune_hparams: Ture
-    tune_range: 20
+    tune_hparams: True
+    tune_range: 2
     hparams_grid:
       num_layer:
         - 1
@@ -66,8 +66,6 @@ model:
         - 0.4
         - 0.5
     resources_per_trial:
-      cpu: 0.4
-      gpu: 0.25
 
 exp:
   weights_ema: True

@@ -20,4 +20,4 @@ exp:
   alpha: 0.01
   beta: 0.99
   balancing: domain_confusion
-  max_epochs: 150
+  max_epochs: 1

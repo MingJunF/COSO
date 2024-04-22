@@ -26,17 +26,14 @@ def pc_simple(data, target, alpha, isdiscrete):
         # Since we're using the full set of other variables, there's no need for subsets
         pval, dep = cond_indep_test(data, x, target, condition_set, isdiscrete)
         ciTest += 1
+        relevant_pvals[x] = pval
         if pval > alpha:
             PC.remove(x)
-        else:
-            # For variables that are not removed, update their p-value
-            relevant_pvals[x] = pval
         #print('relevant_pvals', relevant_pvals)
-
     # Filter the relevant_pvals dictionary to include only those variables that are still in PC
     final_pvals = {var: pval for var, pval in relevant_pvals.items() if var in PC}
 
-    return PC, ciTest, final_pvals
+    return PC, ciTest, relevant_pvals
 
 
 
