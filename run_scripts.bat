@@ -14,9 +14,8 @@ set CUDA_VISIBLE_DEVICES=0
 echo Starting runs for train_rmsn.py
 for /L %%i in (1,1,1) do (
     echo Running iteration %%i of train_rmsn.py
-	python runnables/train_coso.py -m +dataset=cancer_sim +backbone=coso +backbone/coso_hparams/cancer_sim_domain_conf='0'
+	python runnables/train_enc_dec.py -m +dataset=cancer_sim +backbone=crn +backbone/crn_hparams/cancer_sim_domain_conf='0'
 )
-
 
 
 echo All runs complete

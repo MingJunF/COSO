@@ -484,7 +484,7 @@ class SyntheticVitalDatasetCollection(RealDatasetCollection):
         """
         super(SyntheticVitalDatasetCollection, self).__init__()
         self.seed = seed
-        autoregressive = AutoregressiveSimulation(1, 5)
+        autoregressive = AutoregressiveSimulation(1, 2)
         treatments, outcomes, vitals, static_features, outcomes_unscaled, scaling_params, coso_vitals = \
             autoregressive.generate_dataset(5000, 30)
         
@@ -525,8 +525,7 @@ class SyntheticVitalDatasetCollection(RealDatasetCollection):
             static_features_val = static_features[val_indices]
         active_entries = np.isnan(treatments).any(axis=2) == False
         active_entries = active_entries.astype(float)[:, :, np.newaxis]  # Ensure it is 3D and float type  
-        #COSO_index = find_S_variable(treatments, outcomes_unscaled, coso_vitals, active_entries)
-        COSO_index = 0
+        COSO_index = find_S_variable(treatments, outcomes_unscaled, coso_vitals, active_entries)
         self.train_f = MIMIC3RealDataset(treatments_train, outcomes_train, vitals_train, static_features_train, outcomes_unscaled_train, scaling_params, 'train', coso_vitals_train,COSO_index)
         if split['val'] > 0.0:
             self.val_f = MIMIC3RealDataset(treatments_val, outcomes_val, vitals_val, static_features_val, outcomes_unscaled_val, scaling_params, 'val', coso_vitals_val,COSO_index)
@@ -540,7 +539,6 @@ class SyntheticVitalDatasetCollection(RealDatasetCollection):
 def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
     num_patients, timesteps, num_covariates = coso_vitals.shape
     most_relevant_var_for_each_patient = np.full((num_patients, 1), np.nan)
-
     import torch
 
     # 初始化存储数据的列表
@@ -553,7 +551,7 @@ def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
         else:
             # 遍历所有时间步
             for time in range(1, timesteps):
-                # 检查此时间步是否有效
+                    # 检查此时间步是否有效
                 if active_entries[patient, time, 0] == 1:
                     # 获取当前时间步的特征、治疗和结果
                     features = coso_vitals[patient, time, :].flatten()
@@ -580,10 +578,12 @@ def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
     #print('outcome_pvals',outcome_pvals)
 
 
-    treatment_related_vars = {var for var, pval in treatment_pvals.items() if pval <= 0.05}
+    treatment_related_vars = {var for var, pval in treatment_pvals.items() if pval >= 0.05}
     print(treatment_pvals)
-    outcome_related_vars = {var for var, pval in outcome_pvals.items() if pval <= 0.05}
+    print(treatment_related_vars)
+    outcome_related_vars = {var for var, pval in outcome_pvals.items() if pval >= 0.05}
     print(outcome_pvals)
+    print(outcome_related_vars)
     relevant_vars = treatment_related_vars.difference(outcome_related_vars)
     print(relevant_vars)
     if relevant_vars:
@@ -595,5 +595,17 @@ def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
                 most_relevant_var = var
         most_relevant_var_for_each_patient = most_relevant_var
 
-
+    print(most_relevant_var_for_each_patient)
     return most_relevant_var_for_each_patient
+{0: 1.0, 1: 1.5336202097546504e-173, 2: 1.0, 3: 3.6351034028272904e-109, 4: 9.013790718478524e-270, 5: 9.496904761484312e-231, 6: 2.002776997390161e-285, 7: 3.7148440469843304e-97, 8: 6.173472398089803e-96}
+{1, 3, 4, 5, 6, 7, 8}
+{0: 0.0, 1: 1.6316604550826938e-38, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0, 7: 1.0, 8: 1.0}
+{0, 1}
+{3, 4, 5, 6, 7, 8}
+6
+{0: 1.0, 1: 1.0, 2: 1.3811669736438372e-118, 3: 8.674185982682529e-236, 4: 4.2805480379703753e-281, 5: 4.209235907722204e-275, 6: 0.0}
+{2, 3, 4, 5, 6}
+{0: 0.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0}
+{0}
+{2, 3, 4, 5, 6}
+6

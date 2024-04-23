@@ -12,8 +12,8 @@ model:
     seq_hidden_units: 144
     br_size: 72
     fc_hidden_units: 36
-    dropout_rate: 0.1
-    alpha: 0.9
+    dropout_rate: 0.4
+    s_alpha: 1.0
   encoder:
     optimizer:
       learning_rate: 0.001
@@ -36,4 +36,4 @@ model:
 exp:
   weights_ema: False
   balancing: grad_reverse
-  max_epochs: 1
+  max_epochs: 200

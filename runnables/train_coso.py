@@ -42,7 +42,7 @@ def main(args: DictConfig):
     args.model.dim_static_features = dataset_collection.train_f.data['static_features'].shape[-1]
     # 数据初始化
     args.model.dim_cosovitals = dataset_collection.train_f.data['coso_vitals'].shape[-1] if dataset_collection.has_vitals else 0
-    args.model.dim_abstract_confounders = 15
+    args.model.dim_abstract_confounders = 17
     args.model.dim_s = dataset_collection.train_f.data['COSO'].shape[-1]
 
     # Train_callbacks
@@ -51,7 +51,7 @@ def main(args: DictConfig):
     # MlFlow Logger
     if args.exp.logging:
         experiment_name = f'{args.model.name}/{args.dataset.name}'
-        mlf_logger = FilteringMlFlowLogger(filter_submodels=['coso','encoder', 'decoder'],
+        mlf_logger = FilteringMlFlowLogger(filter_submodels=['encoder', 'decoder','coso'],
                                            experiment_name=experiment_name, tracking_uri=args.exp.mlflow_uri)
         encoder_callbacks += [LearningRateMonitor(logging_interval='epoch')]
         decoder_callbacks += [LearningRateMonitor(logging_interval='epoch')]
@@ -62,7 +62,7 @@ def main(args: DictConfig):
 
     # ============================== Initialisation & Training of COSO ==============================
     coso_model = instantiate(args.model.COSO, args, dataset_collection, _recursive_=False)
-    coso_trainer = Trainer(gpus=eval(str(args.exp.gpus)), logger=mlf_logger, max_epochs=args.exp.max_epochs,
+    coso_trainer = Trainer(gpus=eval(str(args.exp.gpus)), logger=mlf_logger, max_epochs=100,
                               callbacks=COSO_callbacks, terminate_on_nan=True)
     coso_trainer.fit(coso_model)
 

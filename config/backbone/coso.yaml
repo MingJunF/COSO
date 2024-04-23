@@ -9,7 +9,7 @@ model:
     dropout_rate:                       # Dropout of LSTM hidden layers + output layers
     num_layer: 1
     batch_size:
-    alpha: 
+    s_alpha: 
     optimizer:
       optimizer_cls: adam
       learning_rate:
@@ -29,6 +29,7 @@ model:
     dropout_rate:                       # Dropout of LSTM hidden layers + output layers
     num_layer: 1
     batch_size:
+    s_alpha: 
     optimizer:
       optimizer_cls: adam
       learning_rate:
@@ -49,6 +50,7 @@ model:
     dropout_rate:                         # Dropout of LSTM hidden layers + output layers
     num_layer: 1
     batch_size:
+    s_alpha: 
     optimizer:
       optimizer_cls: adam
       learning_rate:

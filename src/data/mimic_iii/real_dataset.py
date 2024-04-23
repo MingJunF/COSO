@@ -585,7 +585,6 @@ class MIMIC3RealDatasetCollection(RealDatasetCollection):
 def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
     num_patients, timesteps, num_covariates = coso_vitals.shape
     most_relevant_var_for_each_patient = np.full((num_patients, 1), np.nan)
-
     import torch
 
     # 初始化存储数据的列表
@@ -598,7 +597,7 @@ def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
         else:
             # 遍历所有时间步
             for time in range(1, timesteps):
-                # 检查此时间步是否有效
+                    # 检查此时间步是否有效
                 if active_entries[patient, time, 0] == 1:
                     # 获取当前时间步的特征、治疗和结果
                     features = coso_vitals[patient, time, :].flatten()
@@ -625,20 +624,22 @@ def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
     #print('outcome_pvals',outcome_pvals)
 
 
-    treatment_related_vars = {var for var, pval in treatment_pvals.items() if pval <= 0.05}
+    treatment_related_vars = {var for var, pval in treatment_pvals.items() if pval >= 0.05}
     print(treatment_pvals)
-    outcome_unrelated_vars = {var for var, pval in outcome_pvals.items() if pval <= 0.05}
+    print(treatment_related_vars)
+    outcome_related_vars = {var for var, pval in outcome_pvals.items() if pval >= 0.05}
     print(outcome_pvals)
-    relevant_vars = treatment_related_vars.difference(outcome_unrelated_vars)
+    print(outcome_related_vars)
+    relevant_vars = treatment_related_vars.difference(outcome_related_vars)
     print(relevant_vars)
     if relevant_vars:
-        min_pval = float('inf')
+        min_pval = float('0')
         most_relevant_var = None
         for var in relevant_vars:
-            if var in treatment_pvals and treatment_pvals[var] < min_pval:
+            if var in treatment_pvals and treatment_pvals[var] > min_pval:
                 min_pval = treatment_pvals[var]
                 most_relevant_var = var
         most_relevant_var_for_each_patient = most_relevant_var
 
-
+    print(most_relevant_var_for_each_patient)
     return most_relevant_var_for_each_patient

@@ -15,7 +15,7 @@ model:
       weight_decay: 0.0
       lr_scheduler: False
 
-    tune_hparams: True                 # Hparam tuning
+    tune_hparams: False                # Hparam tuning
     tune_range: 2
     hparams_grid:
       num_layer:
@@ -72,7 +72,7 @@ model:
       lr_scheduler: False
 
     tune_hparams: True                   # Hparam tuning
-    tune_range: 2
+    tune_range: 25
     hparams_grid:
       num_layer:
         - 1

@@ -22,6 +22,8 @@ model:
     dropout_rate: 0.1
 
 exp:
-  weights_ema: False
-  balancing: grad_reverse
-  max_epochs: 1
+  weights_ema: True
+  alpha: 0.01
+  beta: 0.99
+  balancing: domain_confusion
+  max_epochs: 150
