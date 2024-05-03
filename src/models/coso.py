@@ -256,7 +256,7 @@ class COSO(CRN):
         loss_b = self.term_b(torch.cat([confounders, treatment_targets], dim=-1), outcome,mask=flat_mask)
         loss_S = self.term_S(torch.cat([confounders, treatment_targets,S], dim=-1), torch.cat([confounders, treatment_targets, outcome], dim=-1),mask=flat_mask)
 
-        train_loss = loss_a+loss_b+self.s_alpha*loss_S
+        train_loss = -loss_a-loss_b+self.s_alpha*loss_S
         self.log(f'{self.model_type}_train_loss', train_loss, on_epoch=True, on_step=False, sync_dist=True)
         return train_loss
 

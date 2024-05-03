@@ -42,7 +42,7 @@ def main(args: DictConfig):
     args.model.dim_static_features = dataset_collection.train_f.data['static_features'].shape[-1]
     # 数据初始化
     args.model.dim_cosovitals = dataset_collection.train_f.data['coso_vitals'].shape[-1] if dataset_collection.has_vitals else 0
-    args.model.dim_abstract_confounders = 17
+    args.model.dim_abstract_confounders = args.dataset.num_confounder + 5
     args.model.dim_s = dataset_collection.train_f.data['COSO'].shape[-1]
 
     # Train_callbacks

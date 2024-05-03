@@ -324,7 +324,12 @@ class TimeVaryingCausalModel(LightningModule):
         ray.shutdown()
 
         logger.info(f"Best hyperparameters found: {analysis.best_config}.")
-        with open('best_hyperparameters.txt', 'w') as file:
+        model_class_name = self.__class__.__name__
+        filename = f'best_hyperparameters_{model_class_name}_{self.model_type}.txt'
+
+        logger.info(f"Best hyperparameters found: {analysis.best_config}.")
+        # Open and write the best hyperparameters to the formatted filename
+        with open(filename, 'w') as file:
             file.write(f"Best hyperparameters found: {analysis.best_config}\n")
         logger.info("Resetting current hyperparameters to best values.")
         self.set_hparams(self.hparams.model, analysis.best_config, self.input_size, self.model_type)

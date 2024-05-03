@@ -1,14 +1,17 @@
 # @package _global_
 dataset:
-  coeff: 1.0
+  num_confounder: 2
 
 model:
   g_net:
     optimizer:
       learning_rate: 0.01
     num_layer: 1
-    batch_size: 128
-    seq_hidden_units: 12
-    fc_hidden_units: 24
-    dropout_rate: 0.1
-    r_size: 12
+    batch_size: 64
+    seq_hidden_units: 48
+    fc_hidden_units: 40
+    dropout_rate: 0.2
+    r_size: 2
+exp:
+  weights_ema: False
+  balancing: grad_reverse

@@ -5,11 +5,11 @@ dataset:
 model:
   multi:
     optimizer:
-      learning_rate: 0.001
+      learning_rate: 0.01
     batch_size: 128
-    seq_hidden_units: 16
-    br_size: 16
-    fc_hidden_units: 48
+    seq_hidden_units: 48
+    br_size: 8
+    fc_hidden_units: 8
     dropout_rate: 0.1
 
   self_positional_encoding:
@@ -20,4 +20,4 @@ exp:
   alpha: 0.01
   beta: 0.99
   balancing: domain_confusion
-  max_epochs: 1
+  max_epochs: 150

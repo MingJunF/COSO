@@ -1,6 +1,6 @@
 # @package _global_
 dataset:
-  coeff: 0.0
+  num_confounder: 1
 
 model:
   encoder:
@@ -12,15 +12,15 @@ model:
     fc_hidden_units: 6
     dropout_rate: 0.1
 
-  train_decoder: True
+  train_decoder: False
   decoder:
     optimizer:
       learning_rate: 0.01
     batch_size: 1024
+    seq_hidden_units: 3
     br_size: 18
     fc_hidden_units: 18
     dropout_rate: 0.1
-
 exp:
   weights_ema: True
   alpha: 0.01
