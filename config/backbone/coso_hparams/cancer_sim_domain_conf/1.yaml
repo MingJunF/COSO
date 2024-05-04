@@ -1,24 +1,35 @@
 # @package _global_
 dataset:
-  coeff: 1.0
+  num_confounder: 2
 
 model:
+  COSO:
+    optimizer:
+      learning_rate: 0.01
+    batch_size: 32
+    seq_hidden_units: 64
+    br_size: 3
+    fc_hidden_units: 6
+    dropout_rate: 0.2
+    s_alpha: 0.4
+    
   encoder:
     optimizer:
       learning_rate: 0.01
     batch_size: 64
-    seq_hidden_units: 24
+    seq_hidden_units: 48
     br_size: 6
-    fc_hidden_units: 18
-    dropout_rate: 0.2
+    fc_hidden_units: 24
+    dropout_rate: 0.1
 
-  train_decoder: True
+  train_decoder: False
   decoder:
     optimizer:
       learning_rate: 0.01
-    batch_size: 512
-    br_size: 6
-    fc_hidden_units: 6
+    batch_size: 1024
+    seq_hidden_units: 3
+    br_size: 18
+    fc_hidden_units: 18
     dropout_rate: 0.1
 
 exp:

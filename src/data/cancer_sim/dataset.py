@@ -467,6 +467,7 @@ class SyntheticVitalDatasetCollection(RealDatasetCollection):
     """
     def __init__(self,
                  seed: int = 100,
+                 num_confounder: int = 1,
                  split: dict = {'val': 0.2, 'test': 0.2},
                  projection_horizon: int = 5,
                  autoregressive=True,
@@ -484,7 +485,7 @@ class SyntheticVitalDatasetCollection(RealDatasetCollection):
         """
         super(SyntheticVitalDatasetCollection, self).__init__()
         self.seed = seed
-        autoregressive = AutoregressiveSimulation(1, 2)
+        autoregressive = AutoregressiveSimulation(1, num_confounder)
         treatments, outcomes, vitals, static_features, outcomes_unscaled, scaling_params, coso_vitals = \
             autoregressive.generate_dataset(5000, 30)
         
@@ -525,6 +526,7 @@ class SyntheticVitalDatasetCollection(RealDatasetCollection):
             static_features_val = static_features[val_indices]
         active_entries = np.isnan(treatments).any(axis=2) == False
         active_entries = active_entries.astype(float)[:, :, np.newaxis]  # Ensure it is 3D and float type  
+
         COSO_index = find_S_variable(treatments, outcomes_unscaled, coso_vitals, active_entries)
         self.train_f = MIMIC3RealDataset(treatments_train, outcomes_train, vitals_train, static_features_train, outcomes_unscaled_train, scaling_params, 'train', coso_vitals_train,COSO_index)
         if split['val'] > 0.0:
@@ -567,6 +569,7 @@ def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
     # 提取协变量和结果
     covariates_tensor = all_data_tensor[:, 0, :num_covariates]
     treatments_tensor = all_data_tensor[:, 0, num_covariates:num_covariates + 1]
+    #num_covariates:num_covariates + 1
     outcomes_tensor = all_data_tensor[:, 0, -1:]
     # 拼接数据并重新整形
     concatenated_data_oucome = torch.cat([covariates_tensor, outcomes_tensor], -1)
@@ -578,19 +581,19 @@ def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
     #print('outcome_pvals',outcome_pvals)
 
 
-    treatment_related_vars = {var for var, pval in treatment_pvals.items() if pval >= 0.05}
+    treatment_related_vars = {var for var, pval in treatment_pvals.items() if pval >= 0.95}
     print(treatment_pvals)
     print(treatment_related_vars)
-    outcome_related_vars = {var for var, pval in outcome_pvals.items() if pval >= 0.05}
+    outcome_related_vars = {var for var, pval in outcome_pvals.items() if pval >= 0.95}
     print(outcome_pvals)
     print(outcome_related_vars)
     relevant_vars = treatment_related_vars.difference(outcome_related_vars)
     print(relevant_vars)
     if relevant_vars:
-        min_pval = float('inf')
+        min_pval = float('0')
         most_relevant_var = None
         for var in relevant_vars:
-            if var in treatment_pvals and treatment_pvals[var] < min_pval:
+            if var in treatment_pvals and treatment_pvals[var] > min_pval:
                 min_pval = treatment_pvals[var]
                 most_relevant_var = var
         most_relevant_var_for_each_patient = most_relevant_var
@@ -602,10 +605,4 @@ def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
 {0: 0.0, 1: 1.6316604550826938e-38, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0, 7: 1.0, 8: 1.0}
 {0, 1}
 {3, 4, 5, 6, 7, 8}
-6
-{0: 1.0, 1: 1.0, 2: 1.3811669736438372e-118, 3: 8.674185982682529e-236, 4: 4.2805480379703753e-281, 5: 4.209235907722204e-275, 6: 0.0}
-{2, 3, 4, 5, 6}
-{0: 0.0, 1: 1.0, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0}
-{0}
-{2, 3, 4, 5, 6}
 6
