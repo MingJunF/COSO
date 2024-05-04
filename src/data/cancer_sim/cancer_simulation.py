@@ -11,7 +11,7 @@ from scipy.special import expit
 import numpy as np
 import pandas as pd
 class AutoregressiveSimulation:
-    def __init__(self, gamma, num_simulated_hidden_confounders, num_u=1):
+    def __init__(self, gamma, num_simulated_hidden_confounders, num_u):
         self.num_covariates = 5
         self.num_confounders = num_simulated_hidden_confounders
         self.num_treatments = 1
@@ -19,6 +19,7 @@ class AutoregressiveSimulation:
         self.num_u = num_u
         self.gamma_a = 0.5
         self.gamma_y = 0.5
+        self.gamma_a_y = 0.5
         self.covariates_coefficients = dict()
         self.covariates_coefficients['treatments'] = self.generate_coefficients(
             self.p, matrix_shape=(self.num_covariates, self.num_treatments), treatment_coefficients=True)
@@ -72,7 +73,6 @@ class AutoregressiveSimulation:
             
             # 处理当前治疗之后的共变量和混杂因子
             treatment_coefficients[treatment, treatment+1:] = adjusted_coefficients[treatment:]
-        print(treatment_coefficients)   
         return treatment_coefficients
 
 
@@ -241,20 +241,6 @@ class AutoregressiveSimulation:
             history['treatments'].append(a_t)
 
         return np.array(history['covariates']), np.array(history['confounders']), np.array(history['treatments']),np.array(history['confounders_y']),np.array(history['confounders_u'])
-
-    def generate_dict_dataset(self, num_patients, timesteps, p):
-        dataset = dict()
-        for patient in range(num_patients):
-            covariates_history, confounders_history, treatments_history = self.generate_data_single_patient(timesteps,
-                                                                                                            p)
-            dataset[patient] = dict()
-            dataset[patient]['previous_covariates'] = np.array(covariates_history[0:timesteps - 1])
-            dataset[patient]['previous_treatments'] = np.array(treatments_history[0:timesteps - 1])
-            dataset[patient]['covariates'] = np.array(covariates_history[1:timesteps])
-            dataset[patient]['confounders'] = np.array(confounders_history[1:timesteps])
-            dataset[patient]['treatments'] = np.array(treatments_history[1:timesteps])
-            dataset[patient]['confounders_y'] = np.array(confounders_history[1:timesteps])
-        return dataset
     
     def generate_dataset(self, num_patients, max_timesteps):
         dataset = dict()
@@ -274,42 +260,36 @@ class AutoregressiveSimulation:
             combined_history = np.concatenate((confounders_history, covariates_history,confounders_history_y,confounders_history_u), axis=-1)
             if timesteps - 1 < max_timesteps:
                 padding_length = max_timesteps - timesteps
-                previous_covariates = np.vstack((combined_history[1:timesteps], np.full((padding_length, self.num_covariates + self.num_confounders*2+self.num_u), np.nan)))
-                previous_treatments = np.vstack((treatments_history[1:timesteps], np.full((padding_length, self.num_treatments), np.nan)))
                 covariates = np.vstack((combined_history[1:timesteps], np.full((padding_length, self.num_covariates + self.num_confounders*2+self.num_u), np.nan)))
                 treatments = np.vstack((treatments_history[1:timesteps], np.full((padding_length, self.num_treatments), np.nan)))
 
             else:
-
-                previous_covariates = combined_history[1:timesteps]
-                previous_treatments = treatments_history[1:timesteps]
                 covariates = combined_history[1:timesteps]
                 treatments = treatments_history[1:timesteps]
         
             num_conf_y = confounders_history_y.shape[-1]
             num_cov = covariates_history.shape[-1]
 
+            # 生成每个变量的独特系数
             conf_y_coefficients = np.random.uniform(0.2, 0.8, num_conf_y)
             cov_coefficients = np.random.uniform(0.2, 0.8, num_cov)
 
-            # Adjust coefficients to make their average equal to self.gamma_y
-            overall_mean = (np.mean(conf_y_coefficients) + np.mean(cov_coefficients)) / 2
-            conf_y_coefficients *= (self.gamma_y / overall_mean)
-            cov_coefficients *= (self.gamma_y / overall_mean)
+            # 调整系数以符合self.gamma_y
+            overall_coefficients = np.concatenate((conf_y_coefficients, cov_coefficients))
+            adjusted_coefficients = overall_coefficients * (self.gamma_y / np.mean(overall_coefficients))
 
-            # Calculate outcomes using the adjusted coefficients
-            weighted_mean_conf_y = np.mean(confounders_history_y[2:timesteps + 1] * conf_y_coefficients, axis=-1)
-            weighted_mean_cov = np.mean(covariates_history[2:timesteps + 1] * cov_coefficients, axis=-1)
+            # 更新混杂因子和共变量系数
+            conf_y_coefficients = adjusted_coefficients[:num_conf_y]
+            cov_coefficients = adjusted_coefficients[num_conf_y:]
 
-            outcomes = weighted_mean_conf_y + weighted_mean_cov
+            # 应用调整后的系数
+            weighted_sum_conf_y = np.sum(confounders_history_y[1:timesteps] * conf_y_coefficients, axis=-1)
+            weighted_sum_cov = np.sum(covariates_history[1:timesteps] * cov_coefficients, axis=-1)
 
-
-
-
+            # 计算结果
+            outcomes = weighted_sum_conf_y + weighted_sum_cov - self.gamma_y * treatments_history[1:timesteps][:,0]
             outcomes = outcomes[:, np.newaxis]
             outcomes = np.vstack((outcomes, np.full((padding_length, 1), np.nan)))
-            dataset['previous_covariates'].append(previous_covariates)
-            dataset['previous_treatments'].append(previous_treatments)
             dataset['covariates'].append(covariates)
             dataset['treatments'].append(treatments)
             dataset['sequence_length'].append(timesteps)
@@ -323,6 +303,7 @@ class AutoregressiveSimulation:
         dataset['outcomes_scaled'] = (dataset['outcomes'] - mean_outcome) / std_outcome  # 标准化结果
         static_features = np.random.rand(num_patients, 1)  # Assuming a single static feature for simplicity
         return  dataset['treatments'], dataset['outcomes_scaled'], dataset['covariates'], static_features, dataset['outcomes'], scaling_params, dataset['covariates']
+
 
 
 

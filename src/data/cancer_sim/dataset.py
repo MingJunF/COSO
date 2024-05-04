@@ -468,6 +468,7 @@ class SyntheticVitalDatasetCollection(RealDatasetCollection):
     def __init__(self,
                  seed: int = 100,
                  num_confounder: int = 1,
+                 num_u: int = 1,
                  split: dict = {'val': 0.2, 'test': 0.2},
                  projection_horizon: int = 5,
                  autoregressive=True,
@@ -485,7 +486,7 @@ class SyntheticVitalDatasetCollection(RealDatasetCollection):
         """
         super(SyntheticVitalDatasetCollection, self).__init__()
         self.seed = seed
-        autoregressive = AutoregressiveSimulation(1, num_confounder)
+        autoregressive = AutoregressiveSimulation(1, num_confounder, num_u)
         treatments, outcomes, vitals, static_features, outcomes_unscaled, scaling_params, coso_vitals = \
             autoregressive.generate_dataset(5000, 30)
         
@@ -528,6 +529,7 @@ class SyntheticVitalDatasetCollection(RealDatasetCollection):
         active_entries = active_entries.astype(float)[:, :, np.newaxis]  # Ensure it is 3D and float type  
 
         COSO_index = find_S_variable(treatments, outcomes_unscaled, coso_vitals, active_entries)
+        COSO_index = 0
         self.train_f = MIMIC3RealDataset(treatments_train, outcomes_train, vitals_train, static_features_train, outcomes_unscaled_train, scaling_params, 'train', coso_vitals_train,COSO_index)
         if split['val'] > 0.0:
             self.val_f = MIMIC3RealDataset(treatments_val, outcomes_val, vitals_val, static_features_val, outcomes_unscaled_val, scaling_params, 'val', coso_vitals_val,COSO_index)
@@ -600,9 +602,4 @@ def find_S_variable(treatments, outcomes, coso_vitals, active_entries):
 
     print(most_relevant_var_for_each_patient)
     return most_relevant_var_for_each_patient
-{0: 1.0, 1: 1.5336202097546504e-173, 2: 1.0, 3: 3.6351034028272904e-109, 4: 9.013790718478524e-270, 5: 9.496904761484312e-231, 6: 2.002776997390161e-285, 7: 3.7148440469843304e-97, 8: 6.173472398089803e-96}
-{1, 3, 4, 5, 6, 7, 8}
-{0: 0.0, 1: 1.6316604550826938e-38, 2: 1.0, 3: 1.0, 4: 1.0, 5: 1.0, 6: 1.0, 7: 1.0, 8: 1.0}
-{0, 1}
-{3, 4, 5, 6, 7, 8}
-6
+
