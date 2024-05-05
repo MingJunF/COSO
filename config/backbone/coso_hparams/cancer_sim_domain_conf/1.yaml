@@ -1,17 +1,17 @@
 # @package _global_
 dataset:
-  num_confounder: 2
-
+  num_confounder: 3
+  num_u: 1
 model:
   COSO:
     optimizer:
-      learning_rate: 0.01
+      learning_rate: 0.001
     batch_size: 32
     seq_hidden_units: 64
     br_size: 3
     fc_hidden_units: 6
-    dropout_rate: 0.2
-    s_alpha: 0.4
+    dropout_rate: 0.4
+    s_alpha: 1
     
   encoder:
     optimizer:

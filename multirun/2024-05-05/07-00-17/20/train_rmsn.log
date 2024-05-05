@@ -1,0 +1,111 @@
+[2024-05-05 07:08:06,600][__main__][INFO] - 
+model:
+  dim_treatments: 4
+  dim_vitals: 0
+  dim_static_features: 1
+  dim_outcomes: 1
+  dim_cosovitals: ???
+  dim_abstract_confounders: ???
+  dim_s: ???
+  name: RMSN
+  propensity_treatment:
+    _target_: src.models.rmsn.RMSNPropensityNetworkTreatment
+    seq_hidden_units: 8
+    dropout_rate: 0.5
+    num_layer: 1
+    batch_size: 256
+    max_grad_norm: 0.5
+    optimizer:
+      optimizer_cls: adam
+      learning_rate: 0.0001
+      weight_decay: 0.0
+      lr_scheduler: false
+    tune_hparams: false
+    tune_range: 50
+    resources_per_trial: null
+    hparams_grid: null
+  propensity_history:
+    _target_: src.models.rmsn.RMSNPropensityNetworkHistory
+    seq_hidden_units: 12
+    dropout_rate: 0.4
+    num_layer: 1
+    batch_size: 256
+    max_grad_norm: 2.0
+    optimizer:
+      optimizer_cls: adam
+      learning_rate: 0.0001
+      weight_decay: 0.0
+      lr_scheduler: false
+    tune_hparams: false
+    tune_range: 50
+    resources_per_trial: null
+    hparams_grid: null
+  encoder:
+    _target_: src.models.rmsn.RMSNEncoder
+    seq_hidden_units: 8
+    dropout_rate: 0.1
+    num_layer: 1
+    batch_size: 64
+    max_grad_norm: 1.0
+    optimizer:
+      optimizer_cls: adam
+      learning_rate: 0.001
+      weight_decay: 0.0
+      lr_scheduler: false
+    tune_hparams: false
+    tune_range: 50
+    resources_per_trial: null
+    hparams_grid: null
+  train_decoder: false
+  decoder:
+    _target_: src.models.rmsn.RMSNDecoder
+    seq_hidden_units: 64
+    dropout_rate: 0.2
+    num_layer: 1
+    batch_size: 256
+    max_grad_norm: 1.0
+    optimizer:
+      optimizer_cls: adam
+      learning_rate: 0.001
+      weight_decay: 0.0
+      lr_scheduler: false
+    tune_hparams: false
+    tune_range: 20
+    resources_per_trial: null
+dataset:
+  val_batch_size: 512
+  treatment_mode: multiclass
+  _target_: src.data.SyntheticVitalDatasetCollection
+  name: tumor_generator
+  seed: 10
+  num_confounder: 5
+  num_u: 1
+  split:
+    val: 0.15
+    test: 0.15
+  window_size: 15
+  lag: 0
+  max_seq_length: 60
+  projection_horizon: 5
+  cf_seq_mode: sliding_treatment
+  time_step: 30
+exp:
+  seed: 10
+  gpus:
+  - 0
+  max_epochs: 100
+  logging: true
+  mlflow_uri: http://127.0.0.1:5000
+  unscale_rmse: true
+  percentage_rmse: true
+  alpha: 1.0
+  update_alpha: false
+  alpha_rate: exp
+  balancing: null
+  bce_weight: false
+  weights_ema: null
+  beta: 0.99
+
+[2024-05-05 07:08:29,782][src.data.cancer_sim.dataset][INFO] - Shape of processed train data: {'sequence_lengths': (3500,), 'prev_treatments': (3500, 28, 1), 'vitals': (3500, 28, 16), 'next_vitals': (3500, 27, 16), 'current_treatments': (3500, 28, 1), 'static_features': (3500, 1), 'active_entries': (3500, 28, 1), 'outputs': (3500, 28, 1), 'unscaled_outputs': (3500, 28, 1), 'prev_outputs': (3500, 28, 1), 'coso_vitals': (3500, 28, 15), 'COSO': (3500, 28, 1)}
+[2024-05-05 07:08:29,782][src.data.cancer_sim.dataset][INFO] - Shape of processed val data: {'sequence_lengths': (750,), 'prev_treatments': (750, 28, 1), 'vitals': (750, 28, 16), 'next_vitals': (750, 27, 16), 'current_treatments': (750, 28, 1), 'static_features': (750, 1), 'active_entries': (750, 28, 1), 'outputs': (750, 28, 1), 'unscaled_outputs': (750, 28, 1), 'prev_outputs': (750, 28, 1), 'coso_vitals': (750, 28, 15), 'COSO': (750, 28, 1)}
+[2024-05-05 07:08:29,782][src.data.cancer_sim.dataset][INFO] - Shape of processed test data: {'sequence_lengths': (750,), 'prev_treatments': (750, 28, 1), 'vitals': (750, 28, 16), 'next_vitals': (750, 27, 16), 'current_treatments': (750, 28, 1), 'static_features': (750, 1), 'active_entries': (750, 28, 1), 'outputs': (750, 28, 1), 'unscaled_outputs': (750, 28, 1), 'prev_outputs': (750, 28, 1), 'coso_vitals': (750, 28, 15), 'COSO': (750, 28, 1)}

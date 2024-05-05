@@ -1,0 +1,442 @@
+[2024-05-05 00:25:19,095][__main__][INFO] - 
+model:
+  dim_treatments: 4
+  dim_vitals: 0
+  dim_static_features: 1
+  dim_outcomes: 1
+  dim_cosovitals: ???
+  dim_abstract_confounders: ???
+  dim_s: ???
+  name: G-Net
+  g_net:
+    _target_: src.models.gnet.GNet
+    seq_hidden_units: 48
+    num_layer: 1
+    r_size: 2
+    fc_hidden_units: 40
+    num_comp: 1
+    mc_samples: 50
+    fit_vitals: true
+    comp_sizes: null
+    batch_size: 64
+    dropout_rate: 0.2
+    optimizer:
+      optimizer_cls: adam
+      learning_rate: 0.01
+      weight_decay: 0.0
+      lr_scheduler: false
+    tune_hparams: false
+    tune_range: 50
+    hparams_grid: null
+    resources_per_trial: null
+dataset:
+  val_batch_size: 4096
+  treatment_mode: multiclass
+  _target_: src.data.SyntheticVitalDatasetCollection
+  name: tumor_generator
+  seed: 10
+  num_confounder: 3
+  num_u: 1
+  split:
+    val: 0.15
+    test: 0.15
+  window_size: 15
+  lag: 0
+  max_seq_length: 60
+  projection_horizon: 5
+  cf_seq_mode: sliding_treatment
+  time_step: 30
+  holdout_ratio: 0.1
+exp:
+  seed: 10
+  gpus:
+  - 0
+  max_epochs: 100
+  logging: true
+  mlflow_uri: http://127.0.0.1:5000
+  unscale_rmse: true
+  percentage_rmse: true
+  alpha: 1.0
+  update_alpha: false
+  alpha_rate: exp
+  balancing: grad_reverse
+  bce_weight: false
+  weights_ema: false
+  beta: 0.99
+
+[2024-05-05 00:25:41,995][src.data.cancer_sim.dataset][INFO] - Shape of processed train data: {'sequence_lengths': (3500,), 'prev_treatments': (3500, 28, 1), 'vitals': (3500, 28, 12), 'next_vitals': (3500, 27, 12), 'current_treatments': (3500, 28, 1), 'static_features': (3500, 1), 'active_entries': (3500, 28, 1), 'outputs': (3500, 28, 1), 'unscaled_outputs': (3500, 28, 1), 'prev_outputs': (3500, 28, 1), 'coso_vitals': (3500, 28, 11), 'COSO': (3500, 28, 1)}
+[2024-05-05 00:25:41,995][src.data.cancer_sim.dataset][INFO] - Shape of processed val data: {'sequence_lengths': (750,), 'prev_treatments': (750, 28, 1), 'vitals': (750, 28, 12), 'next_vitals': (750, 27, 12), 'current_treatments': (750, 28, 1), 'static_features': (750, 1), 'active_entries': (750, 28, 1), 'outputs': (750, 28, 1), 'unscaled_outputs': (750, 28, 1), 'prev_outputs': (750, 28, 1), 'coso_vitals': (750, 28, 11), 'COSO': (750, 28, 1)}
+[2024-05-05 00:25:42,011][src.data.cancer_sim.dataset][INFO] - Shape of processed test data: {'sequence_lengths': (750,), 'prev_treatments': (750, 28, 1), 'vitals': (750, 28, 12), 'next_vitals': (750, 27, 12), 'current_treatments': (750, 28, 1), 'static_features': (750, 1), 'active_entries': (750, 28, 1), 'outputs': (750, 28, 1), 'unscaled_outputs': (750, 28, 1), 'prev_outputs': (750, 28, 1), 'coso_vitals': (750, 28, 11), 'COSO': (750, 28, 1)}
+[2024-05-05 00:25:42,011][src.data.cancer_sim.dataset][INFO] - Exploding test dataset before testing (multiple sequences)
+[2024-05-05 00:25:42,105][src.data.cancer_sim.dataset][INFO] - Shape of processed test data: {'prev_treatments': (13914, 28, 1), 'current_treatments': (13914, 28, 1), 'static_features': (13914, 1), 'prev_outputs': (13914, 28, 1), 'outputs': (13914, 28, 1), 'vitals': (13914, 28, 12), 'next_vitals': (13914, 27, 12), 'unscaled_outputs': (13914, 28, 1), 'sequence_lengths': (13914,), 'active_entries': (13914, 28, 1)}
+[2024-05-05 00:25:42,105][src.data.cancer_sim.dataset][INFO] - Processing test dataset before testing (multiple sequences)
+[2024-05-05 00:25:42,230][src.data.cancer_sim.dataset][INFO] - Shape of processed test data: {'original_index': (13914,), 'active_encoder_r': (13914, 23), 'prev_treatments': (13914, 5, 1), 'current_treatments': (13914, 5, 1), 'static_features': (13914, 1), 'prev_outputs': (13914, 5, 1), 'outputs': (13914, 5, 1), 'unscaled_outputs': (13914, 5, 1), 'sequence_lengths': (13914,), 'active_entries': (13914, 5, 1)}
+[2024-05-05 00:25:42,355][src.models.gnet][INFO] - Input size of g_net: 15
+[2024-05-05 00:25:42,402][src.data.dataset_collection][INFO] - Splited train_f on train_f: 3150 and train_f_holdout: 350
+[2024-05-05 00:25:42,402][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,433][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,449][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,480][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,511][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,542][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,558][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,589][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,620][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,652][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,683][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,698][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,730][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,761][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,792][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,823][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,839][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,870][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,902][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,933][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,948][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:42,980][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,011][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,042][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,058][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,089][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,120][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,151][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,167][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,198][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,230][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,261][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,276][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,308][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,339][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,370][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,386][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,417][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,448][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,480][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,511][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,526][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,558][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,589][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,620][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,651][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,667][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,698][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,729][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:25:43,761][src.data.dataset_collection][INFO] - Exploding test_f 50 times
+[2024-05-05 00:27:53,387][src.models.gnet][INFO] - Fitting residuals based on train_f_holdout.
+[2024-05-05 00:27:53,387][src.models.gnet][INFO] - Predictions for train.
+[2024-05-05 00:27:54,261][src.models.time_varying_model][INFO] - RMSE calculation for val.
+[2024-05-05 00:27:54,261][src.models.gnet][INFO] - Predictions for val.
+[2024-05-05 00:27:55,199][__main__][INFO] - Val normalised RMSE (all): 3.7812653968635495; Val normalised RMSE (orig): nan
+[2024-05-05 00:27:55,199][src.models.time_varying_model][INFO] - RMSE calculation for test.
+[2024-05-05 00:27:55,199][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:27:56,198][__main__][INFO] - Test normalised RMSE (all): 3.649434966517421; Test normalised RMSE (orig): nan.
+[2024-05-05 00:27:56,261][src.models.time_varying_model][INFO] - RMSE calculation for test.
+[2024-05-05 00:27:56,261][src.models.gnet][INFO] - Autoregressive Prediction for test with MC-sampling of trajectories.
+[2024-05-05 00:27:56,261][src.models.gnet][INFO] - t = 1
+[2024-05-05 00:27:56,261][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:27:57,917][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:27:59,323][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:00,963][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:02,494][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:03,900][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:05,556][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:07,102][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:08,633][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:10,226][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:11,773][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:13,288][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:14,788][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:16,412][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:17,943][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:19,568][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:21,115][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:22,724][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:24,317][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:25,942][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:27,504][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:29,144][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:30,675][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:32,206][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:33,846][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:35,392][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:36,923][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:38,407][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:39,923][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:41,469][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:42,875][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:44,500][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:46,046][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:47,733][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:49,186][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:50,842][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:52,467][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:54,122][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:55,794][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:57,247][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:28:58,887][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:00,433][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:01,964][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:03,558][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:05,073][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:06,651][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:08,244][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:09,681][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:11,275][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:12,868][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:14,305][src.models.gnet][INFO] - t = 2
+[2024-05-05 00:29:14,305][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:15,930][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:17,539][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:19,085][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:20,538][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:22,210][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:23,787][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:25,349][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:27,021][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:28,599][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:30,145][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:31,754][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:33,176][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:34,847][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:36,363][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:37,862][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:39,424][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:40,971][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:42,580][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:44,017][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:45,767][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:47,297][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:48,813][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:50,219][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:51,875][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:53,405][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:54,968][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:56,639][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:58,201][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:29:59,841][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:01,529][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:03,075][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:04,637][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:06,246][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:07,808][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:09,355][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:10,839][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:12,448][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:14,010][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:15,635][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:17,837][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:19,368][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:20,962][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:22,539][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:24,101][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:25,742][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:27,351][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:28,975][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:30,600][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:32,240][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:33,802][src.models.gnet][INFO] - t = 3
+[2024-05-05 00:30:33,802][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:35,364][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:37,005][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:38,614][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:40,160][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:41,847][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:43,363][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:45,034][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:46,612][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:48,158][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:49,689][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:51,361][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:52,892][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:54,516][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:56,141][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:57,750][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:30:59,312][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:00,952][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:02,514][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:04,061][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:05,654][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:07,076][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:08,669][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:10,262][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:11,793][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:14,137][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:15,730][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:17,198][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:18,776][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:20,401][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:21,963][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:23,494][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:25,087][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:26,759][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:28,290][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:29,914][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:31,476][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:33,023][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:34,569][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:36,163][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:37,678][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:39,256][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:40,865][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:42,411][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:43,926][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:45,535][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:47,113][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:48,675][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:50,269][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:51,690][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:53,284][src.models.gnet][INFO] - t = 4
+[2024-05-05 00:31:53,284][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:54,893][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:56,424][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:57,845][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:31:59,485][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:01,047][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:02,594][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:04,203][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:05,750][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:07,265][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:08,858][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:10,420][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:12,045][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:13,638][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:15,075][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:16,638][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:18,278][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:19,793][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:21,199][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:23,745][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:25,276][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:26,776][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:28,432][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:29,978][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:31,603][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:33,134][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:34,852][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:36,414][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:37,976][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:39,601][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:41,147][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:42,632][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:44,241][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:45,803][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:47,334][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:48,927][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:50,458][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:51,989][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:53,473][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:55,019][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:56,613][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:58,097][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:32:59,659][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:01,205][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:02,799][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:04,220][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:05,829][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:07,469][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:09,016][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:10,547][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:12,328][src.models.gnet][INFO] - t = 5
+[2024-05-05 00:33:12,328][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:13,859][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:15,389][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:16,983][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:18,420][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:19,998][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:21,591][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:22,997][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:24,544][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:26,153][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:27,590][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:29,183][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:30,714][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:32,323][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:33,870][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:35,400][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:36,900][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:38,462][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:40,071][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:41,665][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:43,086][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:45,461][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:47,101][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:48,616][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:50,178][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:51,818][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:53,365][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:54,896][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:56,396][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:57,973][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:33:59,535][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:01,285][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:02,863][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:04,409][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:06,034][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:07,596][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:09,111][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:10,720][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:12,298][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:13,813][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:15,313][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:16,875][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:18,437][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:20,062][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:21,593][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:23,139][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:24,842][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:26,373][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:27,951][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:29,513][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:31,137][src.models.gnet][INFO] - t = 6
+[2024-05-05 00:34:31,137][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:32,653][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:34,059][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:35,652][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:37,058][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:38,698][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:40,229][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:41,838][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:43,447][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:45,040][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:46,603][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:48,165][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:49,758][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:51,195][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:52,773][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:54,382][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:55,897][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:57,506][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:34:59,131][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:00,740][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:02,333][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:03,973][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:05,629][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:07,191][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:08,816][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:10,363][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:12,190][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:13,768][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:15,330][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:16,861][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:18,486][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:20,079][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:21,704][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:23,344][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:24,890][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:26,562][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:28,108][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:29,811][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:31,326][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:32,748][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:34,419][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:35,950][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:37,622][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:39,137][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:40,699][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:42,293][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:43,917][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:45,433][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:46,854][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:48,447][src.models.gnet][INFO] - Predictions for test.
+[2024-05-05 00:35:49,931][__main__][INFO] - Test normalised RMSE (n-step prediction): {'2-step': 18.671488341157925, '3-step': 21.552435095532925, '4-step': 23.665570828083183, '5-step': 26.91175767273807, '6-step': 29.343385776465425}

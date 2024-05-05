@@ -1,14 +1,14 @@
 # @package _global_
 dataset:
   num_confounder: 1
-
+  num_u: 1
 model:
   encoder:
     optimizer:
       learning_rate: 0.01
-    batch_size: 128
-    seq_hidden_units: 24
-    br_size: 3
+    batch_size: 64
+    seq_hidden_units: 48
+    br_size: 6
     fc_hidden_units: 6
     dropout_rate: 0.1
 

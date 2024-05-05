@@ -1,7 +1,7 @@
 # @package _global_
 dataset:
-  coeff: 2.0
-
+  num_confounder: 3
+  num_u: 1
 model:
   propensity_treatment:
     seq_hidden_units: 8                 # rnn_hidden_units in the original terminology
@@ -30,7 +30,7 @@ model:
     optimizer:
       learning_rate: 0.001
 
-  train_decoder: True
+  train_decoder: False
   decoder:
     seq_hidden_units: 64                    # rnn_hidden_units in the original terminology
     dropout_rate: 0.2                        # Dropout of LSTM hidden layers + output layers

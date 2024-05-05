@@ -27,7 +27,7 @@ model:
 
     augment_with_masked_vitals: True
 
-    tune_hparams: True
+    tune_hparams: False
     tune_range: 2
     hparams_grid:
       num_layer:

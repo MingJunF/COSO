@@ -144,10 +144,10 @@ class AutoregressiveSimulation:
                                         covariates_history[history_length - index - 1])
             confounder_u_effect  = np.matmul(past_confounders_coefficients_u[index],
                                          confounder_u_history[history_length - index - 1])
-            confounders_u_sum[:self.num_u] += confounder_u_effect[:self.num_u]
+            confounders_u_sum[:3] += confounder_u_effect[:3]
         noise = np.random.normal(0, 0.01, size=(self.num_covariates))
 
-        x_t = treatments_sum + covariates_sum + noise
+        x_t = treatments_sum + covariates_sum + noise+confounders_u_sum
         x_t = np.clip(x_t, -1, 1)
 
         return x_t
@@ -302,12 +302,14 @@ class AutoregressiveSimulation:
         scaling_params = {'output_means': mean_outcome, 'output_stds': std_outcome}
         dataset['outcomes_scaled'] = (dataset['outcomes'] - mean_outcome) / std_outcome  # 标准化结果
         static_features = np.random.rand(num_patients, 1)  # Assuming a single static feature for simplicity
+
         return  dataset['treatments'], dataset['outcomes_scaled'], dataset['covariates'], static_features, dataset['outcomes'], scaling_params, dataset['covariates']
+    def generate_cf(self, treatments, outcomes):
+        treatments_test = 1 - treatments
+        print(treatments_test)
+        outcomes_test =  outcomes + 2 * self.gamma_y * treatments
 
-
-
-
-
+        return treatments_test,outcomes_test
 
 
 

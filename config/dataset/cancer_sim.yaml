@@ -4,6 +4,7 @@ dataset:
   name: tumor_generator
   seed: ${exp.seed}
   num_confounder: ${dataset.num_confounder}    
+  num_u: ${dataset.num_u}    
   split:
     val: 0.15
     test: 0.15

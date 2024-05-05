@@ -1,7 +1,7 @@
 # @package _global_
 dataset:
   num_confounder: 2
-
+  num_u: 1
 model:
   encoder:
     optimizer:
@@ -12,7 +12,7 @@ model:
     fc_hidden_units: 24
     dropout_rate: 0.1
 
-  train_decoder: False
+  train_decoder: True
   decoder:
     optimizer:
       learning_rate: 0.01

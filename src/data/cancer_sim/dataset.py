@@ -472,6 +472,7 @@ class SyntheticVitalDatasetCollection(RealDatasetCollection):
                  split: dict = {'val': 0.2, 'test': 0.2},
                  projection_horizon: int = 5,
                  autoregressive=True,
+                 test_cf=False,
                  **kwargs):
         """
         Args:
@@ -534,7 +535,9 @@ class SyntheticVitalDatasetCollection(RealDatasetCollection):
         if split['val'] > 0.0:
             self.val_f = MIMIC3RealDataset(treatments_val, outcomes_val, vitals_val, static_features_val, outcomes_unscaled_val, scaling_params, 'val', coso_vitals_val,COSO_index)
         self.test_f = MIMIC3RealDataset(treatments_test, outcomes_test, vitals_test, static_features_test, outcomes_unscaled_test, scaling_params, 'test', coso_vitals_test,COSO_index)
-        
+        if test_cf:
+            treatments_cf,outcomes_cf=autoregressive.generate_cf(treatments_test,outcomes_test)
+            self.test_cf_one_step = MIMIC3RealDataset(treatments_cf, outcomes_cf, vitals_test, static_features_test, outcomes_unscaled_test, scaling_params, 'test', coso_vitals_test,COSO_index)
         self.projection_horizon = projection_horizon
         self.has_vitals = True
         self.autoregressive = autoregressive

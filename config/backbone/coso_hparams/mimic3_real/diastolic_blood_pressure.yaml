@@ -9,11 +9,11 @@ model:
     optimizer:
       learning_rate: 0.001
     batch_size: 32
-    seq_hidden_units: 144
+    seq_hidden_units: 64
     br_size: 72
     fc_hidden_units: 36
     dropout_rate: 0.4
-    s_alpha: 1.0
+    s_alpha: 0.8
   encoder:
     optimizer:
       learning_rate: 0.001

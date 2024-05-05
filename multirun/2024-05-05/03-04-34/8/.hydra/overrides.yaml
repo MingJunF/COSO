@@ -1,0 +1,4 @@
+- +dataset=cancer_sim
+- +backbone=crn
+- +backbone/crn_hparams/cancer_sim_domain_conf='1'
+- exp.seed=10000
