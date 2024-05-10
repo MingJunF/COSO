@@ -134,7 +134,6 @@ class CRNEncoder(CRN):
         static_features = batch['static_features']
         curr_treatments = batch['current_treatments']
         init_states = None  # None for encoder
-
         br = self.build_br(prev_treatments, vitals_or_prev_outputs, static_features, init_states)
         treatment_pred = self.br_treatment_outcome_head.build_treatment(br, detach_treatment)
         outcome_pred = self.br_treatment_outcome_head.build_outcome(br, curr_treatments)

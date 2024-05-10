@@ -62,6 +62,7 @@ def main(args: DictConfig):
 
     # ============================== Initialisation & Training of COSO ==============================
     coso_model = instantiate(args.model.COSO, args, dataset_collection, _recursive_=False)
+
     coso_trainer = Trainer(gpus=eval(str(args.exp.gpus)), logger=mlf_logger, max_epochs=100,
                               callbacks=COSO_callbacks, terminate_on_nan=True)
     coso_trainer.fit(coso_model)
@@ -74,6 +75,8 @@ def main(args: DictConfig):
     dataset_collection.train_f.data['vitals'] = train_cosovitals
     dataset_collection.val_f.data['vitals'] = val_cosovitals
     dataset_collection.test_f.data['vitals'] = test_cosovitals
+    if hasattr(dataset_collection, 'test_cf_one_step'): 
+        dataset_collection.test_cf_one_step.data['vitals'] = test_cosovitals
     # ============================== Initialisation & Training of encoder ==============================
     encoder = instantiate(args.model.encoder, args, dataset_collection, _recursive_=False)
     if args.model.encoder.tune_hparams:

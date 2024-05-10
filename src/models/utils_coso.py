@@ -100,7 +100,7 @@ class InfoNCE(nn.Module):
 class AutoRegressiveLSTM(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, num_layers=1, dropout_rate=0.0, batch_first=True):
         super().__init__()
-        self.lstm = nn.LSTM(input_size=input_size+output_size, hidden_size=hidden_size, num_layers=num_layers,
+        self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers,
                             batch_first=batch_first)
         self.output_layer = nn.Linear(hidden_size, output_size)
         self.hidden_size = hidden_size
@@ -111,8 +111,11 @@ class AutoRegressiveLSTM(nn.Module):
         batch_size, seq_len, _ = x.size()
         device = x.device
         outputs = []
-        hn, cn, output_t = initial_state
-        # 初始的输出（可以设为全零向量）
+        if initial_state is not None:
+            hn, cn, output_t = initial_state
+            hn = hn  # 转换为 float
+            cn = cn # 转换为 float
+            output_t = output_t
         # 自回归地处理每个时间步
         if self.training:
             h_dropout = torch.bernoulli(hn.data.new(hn.data.size()).fill_(1 - self.dropout_rate)) / (1 - self.dropout_rate)
@@ -120,10 +123,9 @@ class AutoRegressiveLSTM(nn.Module):
             out_dropout = torch.bernoulli(output_t.data.new(output_t.data.size()).fill_(1 - self.dropout_rate)) / (1 - self.dropout_rate)
         for t in range(seq_len):
             # 只对序列的非填充部分生成输出
-            effective_batch = (sequence_length > t).float().to(device)
+            effective_batch = (sequence_length > t).double().to(device)
             effective_batch = effective_batch.unsqueeze(-1)       
-            lstm_input = torch.cat((x[:, t:t+1, :] * effective_batch, output_t), dim=-1)
-
+            lstm_input = (x[:, t:t+1, :] * effective_batch)
             # LSTM前向传播
             lstm_out, (hn, cn) = self.lstm(lstm_input, (hn, cn))
 

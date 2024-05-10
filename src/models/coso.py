@@ -74,7 +74,7 @@ class CRN(BRCausalModel):
             self.term_a = InfoNCE(self.dim_abstract_confounders+self.dim_s, self.dim_treatments)
             self.term_b = InfoNCE(self.dim_abstract_confounders+self.dim_treatments, self.dim_outcome)
             self.term_S = CLUB(self.dim_abstract_confounders+self.dim_treatments+self.dim_s, self.dim_abstract_confounders+self.dim_treatments+self.dim_outcome)
-            self.lstm_confounder = AutoRegressiveLSTM(input_size=self.dim_cosovitals,
+            self.lstm_confounder = AutoRegressiveLSTM(input_size=self.dim_cosovitals+1,
                                                     hidden_size=self.seq_hidden_units,
                                                     output_size=self.dim_abstract_confounders,dropout_rate=self.dropout_rate
                                                     )
@@ -113,9 +113,10 @@ class CRN(BRCausalModel):
         return br
 
     def trainable_init_h_confounder(self):
-        h0 = torch.zeros(1, self.batch_size,self.seq_hidden_units)
-        c0 = torch.zeros(1,self.batch_size, self.seq_hidden_units)
-        z0 = torch.zeros(self.batch_size,1 ,self.dim_abstract_confounders)
+        dtype = torch.double
+        h0 = torch.zeros(1, self.batch_size,self.seq_hidden_units, dtype=dtype)
+        c0 = torch.zeros(1,self.batch_size, self.seq_hidden_units, dtype=dtype)
+        z0 = torch.zeros(self.batch_size,1 ,self.dim_abstract_confounders, dtype=dtype)
         trainable_h0 = nn.Parameter(h0, requires_grad=True)
         trainable_c0 = nn.Parameter(c0, requires_grad=True)
         trainable_z0 = nn.Parameter(z0, requires_grad=True)
@@ -228,11 +229,13 @@ class COSO(CRN):
 
     def forward(self, batch, detach_treatment=False):
         batch_size = batch['coso_vitals'].size(0)
-
-        lstm_input_confounder = batch['coso_vitals']
-        lstm_input_confounder = lstm_input_confounder.float()
+        lstm_input_confounder = []
+        lstm_input_confounder.append(batch['coso_vitals'])
+        lstm_input_confounder.append(batch['prev_treatments'])
+        lstm_input_confounder = torch.cat(lstm_input_confounder, dim=-1)
+        lstm_input_confounder = lstm_input_confounder.double()
         sequence_lengths = torch.sum(batch['active_entries'], dim=1).squeeze()  # 计算每个病人的有效时间长度
-        sequence_lengths = sequence_lengths.reshape(-1, 1)
+        sequence_lengths = sequence_lengths.reshape(-1, 1).double()
         hn = self.trainable_h0_confounder[:, :batch_size, :].contiguous()
         cn = self.trainable_c0_confounder[:, :batch_size, :].contiguous()
         zn = self.trainable_z0_confounder[:batch_size, :, :].contiguous()
@@ -252,31 +255,13 @@ class COSO(CRN):
         mask = torch.sign(torch.max(torch.abs(active_entries), dim=2).values)
         flat_mask = mask.view(-1, 1)
 
-        loss_a = self.term_a(torch.cat([confounders,S], dim=-1), treatment_targets,mask=flat_mask)
+        loss_a = self.term_a(torch.cat([confounders, S], dim=-1), treatment_targets,mask=flat_mask)
         loss_b = self.term_b(torch.cat([confounders, treatment_targets], dim=-1), outcome,mask=flat_mask)
         loss_S = self.term_S(torch.cat([confounders, treatment_targets,S], dim=-1), torch.cat([confounders, treatment_targets, outcome], dim=-1),mask=flat_mask)
 
         train_loss = -loss_a-loss_b+self.s_alpha*loss_S
         self.log(f'{self.model_type}_train_loss', train_loss, on_epoch=True, on_step=False, sync_dist=True)
         return train_loss
-
-    def process_full_dataset(self, batch, batch_size=32):
-        # 创建数据加载器
-        data_loader = DataLoader(batch, batch_size=batch_size, shuffle=False)
-
-        # 初始化一个列表来收集每个批次的输出
-        all_outputs = []
-
-        # 将模型设置为评估模式
-        self.eval()
-
-        # 遍历数据加载器中的每个批次
-        for batch in data_loader:
-            with torch.no_grad():  # 在推理时不计算梯度
-                output,_ = self(batch)
-                all_outputs.append(output)
-
-        return all_outputs
     
 
 

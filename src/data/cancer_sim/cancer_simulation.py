@@ -50,29 +50,24 @@ class AutoregressiveSimulation:
 
 
     def generate_treatment_coefficients(self):
-        # 初始化系数矩阵，形状为(num_treatments, num_covariates + num_confounders)
-        treatment_coefficients = np.zeros(shape=(self.num_treatments, self.num_covariates + self.num_confounders))
+        # Initialize the coefficient matrix, shape (num_treatments, num_covariates + num_confounders)
+        treatment_coefficients = np.zeros((self.num_treatments, self.num_covariates + self.num_confounders))
         
-        # 对每种治疗，设定固定的系数并随机生成其他系数
+        # For each treatment, set fixed coefficients and generate other coefficients randomly
         for treatment in range(self.num_treatments):
-            # 固定当前治疗的主要共变量影响
-            treatment_coefficients[treatment][treatment] = 0.8
+            # Generate random coefficients for all covariates and confounders
+            random_coefficients = np.random.uniform(low=0.2, high=0.8, size=(self.num_covariates + self.num_confounders))
             
-            # 除了当前治疗的主要共变量外，其他所有共变量和混杂因子随机生成影响系数
-            num_elements = self.num_covariates + self.num_confounders - 1  # 总元素数减去一个因为一个已经设定
-            random_coefficients = np.random.uniform(low=0.2, high=0.8, size=(num_elements))
+            # Set the main covariate effect for the current treatment to a fixed value
+            random_coefficients[treatment] = 0.8
             
-            # 调整生成的随机系数，使平均值为0.5
+            # Adjust all coefficients to ensure the average is `self.gamma_a`
             current_mean = np.mean(random_coefficients)
-            adjusted_coefficients = random_coefficients * (self.gamma_a / current_mean)  # 调整系数使平均值为0.5
+            adjusted_coefficients = random_coefficients * (self.gamma_a / current_mean)
             
-            # 填充系数矩阵
-            # 先处理当前治疗之前的共变量和混杂因子
-            if treatment > 0:
-                treatment_coefficients[treatment, :treatment] = adjusted_coefficients[:treatment]
-            
-            # 处理当前治疗之后的共变量和混杂因子
-            treatment_coefficients[treatment, treatment+1:] = adjusted_coefficients[treatment:]
+            # Fill the coefficient matrix with adjusted coefficients
+            treatment_coefficients[treatment, :] = adjusted_coefficients
+        
         return treatment_coefficients
 
 
@@ -133,7 +128,7 @@ class AutoregressiveSimulation:
 
         treatments_sum = np.zeros(shape=(self.num_covariates,))
         covariates_sum = np.zeros(shape=(self.num_covariates,))
-        confounders_u_sum = np.zeros(shape=(self.num_covariates,))
+        confounders_u_sum = np.zeros(shape=(self.num_u,))
 
         for index in range(p):
 
@@ -148,7 +143,7 @@ class AutoregressiveSimulation:
         noise = np.random.normal(0, 0.01, size=(self.num_covariates))
 
         x_t = treatments_sum + covariates_sum + noise+confounders_u_sum
-        x_t = np.clip(x_t, -1, 1)
+        #x_t = np.clip(x_t, -1, 1)
 
         return x_t
 
@@ -171,7 +166,7 @@ class AutoregressiveSimulation:
         noise = np.random.normal(0, 0.01, size=(self.num_confounders))
 
         z_t = treatments_sum + confounders_sum + noise
-        z_t = np.clip(z_t, -1, 1)
+        #z_t = np.clip(z_t, -1, 1)
 
         return z_t
     def generate_confounders_u_single_timestep(self, p, history):
@@ -209,7 +204,7 @@ class AutoregressiveSimulation:
         noise = np.random.normal(0, 0.01, size=(self.num_confounders))
 
         y_t = treatments_sum + confounders_sum_y + noise
-        y_t = np.clip(y_t, -1, 1)
+        #y_t = np.clip(y_t, -1, 1)
 
         return y_t
 
@@ -302,14 +297,15 @@ class AutoregressiveSimulation:
         scaling_params = {'output_means': mean_outcome, 'output_stds': std_outcome}
         dataset['outcomes_scaled'] = (dataset['outcomes'] - mean_outcome) / std_outcome  # 标准化结果
         static_features = np.random.rand(num_patients, 1)  # Assuming a single static feature for simplicity
-
         return  dataset['treatments'], dataset['outcomes_scaled'], dataset['covariates'], static_features, dataset['outcomes'], scaling_params, dataset['covariates']
-    def generate_cf(self, treatments, outcomes):
+    def generate_cf(self, treatments, outcomes_unscaled_test):
         treatments_test = 1 - treatments
-        print(treatments_test)
-        outcomes_test =  outcomes + 2 * self.gamma_y * treatments
+        outcomes_test_unscaled =  outcomes_unscaled_test + self.gamma_y * treatments -  self.gamma_y * treatments_test
+        mean_outcome = np.mean(outcomes_test_unscaled[~np.isnan(outcomes_test_unscaled)])
+        std_outcome = np.std(outcomes_test_unscaled[~np.isnan(outcomes_test_unscaled)])
+        outcomes_scaled = (outcomes_test_unscaled - mean_outcome) / std_outcome
 
-        return treatments_test,outcomes_test
+        return treatments_test,outcomes_test_unscaled,outcomes_scaled
 
 
 
