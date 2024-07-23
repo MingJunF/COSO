@@ -1,0 +1,20 @@
+# @package _global_
+dataset:
+  num_confounder: 3
+  num_u: 1
+  datasize: 5000
+  total_time_step: 30
+  num_covariates: 25
+model:
+  g_net:
+    optimizer:
+      learning_rate: 0.01
+    num_layer: 1
+    batch_size: 64
+    seq_hidden_units: 48
+    fc_hidden_units: 40
+    dropout_rate: 0.2
+    r_size: 2
+exp:
+  weights_ema: False
+  balancing: grad_reverse

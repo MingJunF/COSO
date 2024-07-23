@@ -1,6 +1,25 @@
 # @package _global_
 model:
   name: CT
+  COSO:                              # Missing hyperparameters are to be filled in command line / with tune_hparams = True / selected with +backbone/coso_hparams=...
+    _target_: src.models.coso.COSO
+    seq_hidden_units:                   # rnn_hidden_units in the original terminology
+    br_size:
+    fc_hidden_units:
+    dropout_rate:                       # Dropout of LSTM hidden layers + output layers
+    num_layer: 1
+    batch_size:
+    s_alpha: 
+    optimizer:
+      optimizer_cls: adam
+      learning_rate:
+      weight_decay: 0.0
+      lr_scheduler: False
+
+    tune_hparams: False                # Hparam tuning
+    tune_range: 1
+    hparams_grid:
+    resources_per_trial:
   multi:                                  # Missing hyperparameters are to be filled in command line / with tune_hparams = True / selected with +backbone/ct_hparams=...
     _target_: src.models.ct.CT
     max_seq_length: ${sum:${dataset.max_seq_length},${dataset.projection_horizon}}  # Will be calculated dynamically

@@ -1,3 +1,0 @@
-- +dataset=cancer_sim
-- +backbone=coso
-- +backbone/coso_hparams/cancer_sim_domain_conf='4'

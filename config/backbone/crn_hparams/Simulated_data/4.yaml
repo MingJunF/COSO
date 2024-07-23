@@ -1,0 +1,32 @@
+# @package _global_
+dataset:
+  num_confounder: 3
+  num_u: 1
+  datasize: 5000
+  total_time_step: 30
+  num_covariates: 25
+model:
+  encoder:
+    optimizer:
+      learning_rate: 0.01
+    batch_size: 64
+    seq_hidden_units: 60
+    br_size: 16
+    fc_hidden_units: 32
+    dropout_rate: 0.3
+
+  train_decoder: False
+  decoder:
+    optimizer:
+      learning_rate: 0.01
+    batch_size: 1024
+    seq_hidden_units: 3
+    br_size: 18
+    fc_hidden_units: 18
+    dropout_rate: 0.1
+exp:
+  weights_ema: True
+  alpha: 0.01
+  beta: 0.99
+  balancing: domain_confusion
+  max_epochs: 150

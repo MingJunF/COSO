@@ -1,7 +1,7 @@
 # @package _global_
 model:
   name: COSO
-  COSO:                              # Missing hyperparameters are to be filled in command line / with tune_hparams = True / selected with +backbone/crn_hparams=...
+  COSO:                              # Missing hyperparameters are to be filled in command line / with tune_hparams = True / selected with +backbone/coso_hparams=...
     _target_: src.models.coso.COSO
     seq_hidden_units:                   # rnn_hidden_units in the original terminology
     br_size:
@@ -21,7 +21,7 @@ model:
     hparams_grid:
     resources_per_trial:
 
-  encoder:                              # Missing hyperparameters are to be filled in command line / with tune_hparams = True / selected with +backbone/crn_hparams=...
+  encoder:                              # Missing hyperparameters are to be filled in command line / with tune_hparams = True / selected with +backbone/coso_hparams=...
     _target_: src.models.coso.CRNEncoder
     seq_hidden_units:                   # rnn_hidden_units in the original terminology
     br_size:
@@ -42,7 +42,7 @@ model:
     resources_per_trial:
 
   train_decoder: False
-  decoder:                                # Missing hyperparameters are to be filled in command line / with tune_hparams = True / selected with +backbone/crn_hparams=...
+  decoder:                                # Missing hyperparameters are to be filled in command line / with tune_hparams = True / selected with +backbone/coso_hparams=...
     _target_: src.models.coso.CRNDecoder
     seq_hidden_units:                     # rnn_hidden_units in the original terminology
     br_size:

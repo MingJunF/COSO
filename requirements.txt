@@ -1,3 +1,4 @@
+
 # external requirements
 importlib-metadata<5.0
 importlib-resources==5.12.0
@@ -16,49 +17,4 @@ hydra_colorlog
 mlflow
 scikit-learn
 tables
-ray[tune]==1.6.0
-protobuf==3.20.3
-
-git+https://github.com/fadel/pytorch_ema
-set PYTHONPATH=. && set CUDA_VISIBLE_DEVICES=0
-python runnables/train_enc_dec.py -m +dataset=mimic3_real +backbone=crn +backbone/crn_hparams/mimic3_real=diastolic_blood_pressure exp.seed=10,101
-set PYTHONPATH=%CD% && set CUDA_VISIBLE_DEVICES=0
-python runnables/train_multi.py -m +dataset=cancer_sim +backbone=ct +backbone/ct_hparams/cancer_sim_domain_conf='0'
-python runnables/train_coso.py -m +dataset=mimic3_real +backbone=coso +backbone/coso_hparams/mimic3_real=diastolic_blood_pressure
-python runnables/train_enc_dec.py -m +dataset=cancer_sim +backbone=crn +backbone/crn_hparams/cancer_sim_domain_conf='0' exp.seed=10
- exp.seed=10
-
-python runnables/train_rmsn.py -m +dataset=mimic3_real +backbone=rmsn +backbone/rmsn_hparams/mimic3_real=diastolic_blood_pressure
-
-python runnables/train_coso.py -m +dataset=cancer_sim +backbone=coso +backbone/coso_hparams/cancer_sim_domain_conf='0' exp.seed=10
-
-python runnables/train_coso.py -m +dataset=mimic3_real +backbone=coso +backbone/coso_hparams/mimic3_real=diastolic_blood_pressure
-
-python runnables/train_multi.py -m +dataset=mimic3_real +backbone=ct +backbone/ct_hparams/mimic3_real=diastolic_blood_pressure
-{0, 1, 2, 5, 8, 12, 14, 17, 21, 22}
-{8: 0.015254496317095856, 9: 0.028802709881491362, 10: 0.03296330144614923, 17: 0.025865092584312466}
-{0: 4.157905729785558e-12, 1: 0.00011350671887220945, 2: 4.984441538896162e-46, 9: 0.0012077182066305735, 12: 0.003434134327426224, 24: 7.772403043318886e-06}
-
-
-
-
-
-{'encoder_val_bce_loss': 0.5289919972419739,
- 'encoder_val_loss': 0.6795637011528015,
- 'encoder_val_mse_loss': 0.15057174861431122}
-
- {'encoder_val_bce_loss': 0.5881879329681396,
- 'encoder_val_loss': 0.7776705026626587,
- 'encoder_val_mse_loss': 0.18948256969451904}
---------------------------------------------------------------------------------
-Testing: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<00:00, 13.94it/s] 
-[2024-04-17 14:37:14,467][src.models.time_varying_model][INFO] - RMSE calculation for val.
-[2024-04-17 14:37:14,468][src.models.time_varying_model][INFO] - Predictions for val.
-LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
-Predicting: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s]
-[2024-04-17 14:37:14,999][__main__][INFO] - Val normalised RMSE (all): 5.321746484068748; Val normalised RMSE (orig): 5.366947660324378
-[2024-04-17 14:37:15,000][src.models.time_varying_model][INFO] - RMSE calculation for test.
-[2024-04-17 14:37:15,000][src.models.time_varying_model][INFO] - Predictions for test.
-LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
-Predicting: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s]
-[2024-04-17 14:37:15,525][__main__][INFO] - Test normalised RMSE (all): 4.886092079818019; Test normalised RMSE (orig): 4.868773461319545.
+ray[tune]

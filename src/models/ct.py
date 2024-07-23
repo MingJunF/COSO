@@ -19,7 +19,7 @@ from src.models.edct import EDCT
 from src.models.utils_transformer import TransformerMultiInputBlock, LayerNorm
 from src.data import RealDatasetCollection, SyntheticDatasetCollection
 from src.models.utils import BRTreatmentOutcomeHead
-
+from src.models.coso import CRN
 logger = logging.getLogger(__name__)
 
 
@@ -214,3 +214,72 @@ class CT(EDCT):
             fig_keys += ['cross_attention_vo', 'cross_attention_ov', 'cross_attention_vt', 'cross_attention_tv',
                          'self_attention_v']
         self._visualize(fig_keys, dataset, index, artifacts_path)
+class COSO(CRN):
+    model_type = 'COSO'
+    def __init__(self, args: DictConfig,
+                 dataset_collection: Union[RealDatasetCollection, SyntheticDatasetCollection] = None,
+                 autoregressive: bool = None,
+                 has_vitals: bool = None,
+                 bce_weights: np.array = None,
+                 **kwargs):
+        super().__init__(args, dataset_collection, autoregressive, has_vitals, bce_weights)
+
+        self.input_size = self.dim_treatments + self.dim_static_features + self.dim_outcome
+        self._init_specific(args.model.COSO)
+        self.save_hyperparameters(args)
+    def prepare_data(self) -> None:
+        # Datasets normalisation etc.
+        if self.dataset_collection is not None and not self.dataset_collection.processed_data_encoder:
+            self.dataset_collection.process_data_encoder()
+        if self.bce_weights is None and self.hparams.exp.bce_weight:
+            self._calculate_bce_weights()
+
+
+    def forward(self, batch, detach_treatment=False):
+        batch_size = batch['coso_vitals'].size(0)
+        lstm_input_confounder = []
+        lstm_input_confounder.append(batch['coso_vitals'])
+        lstm_input_confounder.append(batch['prev_treatments'])
+        lstm_input_confounder = torch.cat(lstm_input_confounder, dim=-1)
+        sequence_lengths = torch.sum(batch['active_entries'], dim=1).squeeze()  # 计算每个病人的有效时间长度
+        sequence_lengths = sequence_lengths.reshape(-1, 1)
+        hn = self.trainable_h0[:, :batch_size, :].contiguous()
+        cn = self.trainable_c0[:, :batch_size, :].contiguous()
+        zn = self.trainable_z0[:batch_size, :, :].contiguous()
+        lstm_output_confounder = self.lstm_confounder(lstm_input_confounder, sequence_length=sequence_lengths, initial_state=(hn, cn, zn))
+        hidden_confounders = lstm_output_confounder.view(-1, self.dim_abstract_confounders)
+        return lstm_output_confounder,hidden_confounders
+    
+    def training_step(self, batch, batch_ind, optimizer_idx=None):
+        for par in self.parameters():
+            par.requires_grad = True
+        _ , confounders = self(batch)
+        S =  batch['COSO'].reshape(-1, self.dim_s)
+        treatment_targets = batch['current_treatments'].reshape(-1, self.dim_treatments)
+        outcome = batch['outputs'].reshape(-1, self.dim_outcome)
+        active_entries = batch['active_entries']
+
+        mask = torch.sign(torch.max(torch.abs(active_entries), dim=2).values)
+        flat_mask = mask.view(-1, 1)
+        # mutual information constraint is apply here
+        loss_a = self.term_a(torch.cat([confounders, S], dim=-1), treatment_targets,mask=flat_mask)
+        loss_b = self.term_b(torch.cat([confounders, treatment_targets], dim=-1), outcome,mask=flat_mask)
+        loss_S = self.term_S(S, outcome, torch.cat([confounders, treatment_targets], dim=-1),mask=flat_mask)
+
+        train_loss = -loss_a-loss_b+self.s_alpha*loss_S
+        self.log(f'{self.model_type}_train_loss', train_loss, on_epoch=True, on_step=False, sync_dist=True)
+        return train_loss
+    
+
+    #Store the learned covariates into dataset.
+    def process_full_dataset(self, dataset, batch_size=32):
+        data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        all_outputs = []
+        self.eval()
+        for batch in data_loader:
+            with torch.no_grad():
+                output, _ = self.forward(batch)
+                all_outputs.append(output) 
+        all_outputs = torch.cat(all_outputs, dim=0)
+
+        return all_outputs

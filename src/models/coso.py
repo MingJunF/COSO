@@ -19,15 +19,14 @@ from src.data import RealDatasetCollection, SyntheticDatasetCollection
 from src.models.time_varying_model import BRCausalModel
 from src.models.utils import grad_reverse, BRTreatmentOutcomeHead, AlphaRise
 from src.models.utils_lstm import VariationalLSTM
-from src.models.utils_coso import InfoNCE, CLUB, AutoRegressiveLSTM
+from src.models.utils_coso import ConditionalMINE, MINE, AutoRegressiveLSTM,ConditionalFenchelMIUpper
 
 logger = logging.getLogger(__name__)
 
 
 class CRN(BRCausalModel):
     """
-    Pytorch-Lightning implementation of Counterfactual Recurrent Network (CRN)
-    (https://arxiv.org/abs/2002.04083, https://github.com/ioanabica/Counterfactual-Recurrent-Network)
+    Pytorch-Lightning implementation of CounterFactual Prediction network (CFPnet). Here we plug our CFPnet into the CRN network
     """
 
     model_type = None  # Will be defined in subclasses
@@ -69,17 +68,15 @@ class CRN(BRCausalModel):
             self.br_treatment_outcome_head = BRTreatmentOutcomeHead(self.seq_hidden_units, self.br_size, self.fc_hidden_units,
                                                                     self.dim_treatments, self.dim_outcome, self.alpha,
                                                                     self.update_alpha, self.balancing)
-
-
-            self.term_a = InfoNCE(self.dim_abstract_confounders+self.dim_s, self.dim_treatments)
-            self.term_b = InfoNCE(self.dim_abstract_confounders+self.dim_treatments, self.dim_outcome)
-            self.term_S = CLUB(self.dim_abstract_confounders+self.dim_treatments+self.dim_s, self.dim_abstract_confounders+self.dim_treatments+self.dim_outcome)
+            self.term_a = MINE(self.dim_abstract_confounders+self.dim_s, self.dim_treatments)
+            self.term_b = MINE(self.dim_abstract_confounders+self.dim_treatments, self.dim_outcome)
+            self.term_S = ConditionalFenchelMIUpper(self.dim_s, self.dim_outcome,self.dim_abstract_confounders+self.dim_treatments)
             self.lstm_confounder = AutoRegressiveLSTM(input_size=self.dim_cosovitals+1,
                                                     hidden_size=self.seq_hidden_units,
                                                     output_size=self.dim_abstract_confounders,dropout_rate=self.dropout_rate
                                                     )
 
-            self.trainable_h0_confounder, self.trainable_c0_confounder, self.trainable_z0_confounder = self.trainable_init_h_confounder()
+            self.trainable_h0, self.trainable_c0, self.trainable_z0 = self.trainable_param()
 
 
         except MissingMandatoryValue:
@@ -112,11 +109,10 @@ class CRN(BRCausalModel):
         br = self.br_treatment_outcome_head.build_br(x)
         return br
 
-    def trainable_init_h_confounder(self):
-        dtype = torch.double
-        h0 = torch.zeros(1, self.batch_size,self.seq_hidden_units, dtype=dtype)
-        c0 = torch.zeros(1,self.batch_size, self.seq_hidden_units, dtype=dtype)
-        z0 = torch.zeros(self.batch_size,1 ,self.dim_abstract_confounders, dtype=dtype)
+    def trainable_param(self):
+        h0 = torch.zeros(1, self.batch_size,self.seq_hidden_units)
+        c0 = torch.zeros(1,self.batch_size, self.seq_hidden_units)
+        z0 = torch.zeros(self.batch_size,1 ,self.dim_abstract_confounders)
         trainable_h0 = nn.Parameter(h0, requires_grad=True)
         trainable_c0 = nn.Parameter(c0, requires_grad=True)
         trainable_z0 = nn.Parameter(z0, requires_grad=True)
@@ -233,12 +229,11 @@ class COSO(CRN):
         lstm_input_confounder.append(batch['coso_vitals'])
         lstm_input_confounder.append(batch['prev_treatments'])
         lstm_input_confounder = torch.cat(lstm_input_confounder, dim=-1)
-        lstm_input_confounder = lstm_input_confounder.double()
-        sequence_lengths = torch.sum(batch['active_entries'], dim=1).squeeze()  # 计算每个病人的有效时间长度
-        sequence_lengths = sequence_lengths.reshape(-1, 1).double()
-        hn = self.trainable_h0_confounder[:, :batch_size, :].contiguous()
-        cn = self.trainable_c0_confounder[:, :batch_size, :].contiguous()
-        zn = self.trainable_z0_confounder[:batch_size, :, :].contiguous()
+        sequence_lengths = torch.sum(batch['active_entries'], dim=1).squeeze()
+        sequence_lengths = sequence_lengths.reshape(-1, 1)
+        hn = self.trainable_h0[:, :batch_size, :].contiguous()
+        cn = self.trainable_c0[:, :batch_size, :].contiguous()
+        zn = self.trainable_z0[:batch_size, :, :].contiguous()
         lstm_output_confounder = self.lstm_confounder(lstm_input_confounder, sequence_length=sequence_lengths, initial_state=(hn, cn, zn))
         hidden_confounders = lstm_output_confounder.view(-1, self.dim_abstract_confounders)
         return lstm_output_confounder,hidden_confounders
@@ -254,35 +249,29 @@ class COSO(CRN):
 
         mask = torch.sign(torch.max(torch.abs(active_entries), dim=2).values)
         flat_mask = mask.view(-1, 1)
-
+        # mutual information constraint is apply here
         loss_a = self.term_a(torch.cat([confounders, S], dim=-1), treatment_targets,mask=flat_mask)
         loss_b = self.term_b(torch.cat([confounders, treatment_targets], dim=-1), outcome,mask=flat_mask)
-        loss_S = self.term_S(torch.cat([confounders, treatment_targets,S], dim=-1), torch.cat([confounders, treatment_targets, outcome], dim=-1),mask=flat_mask)
-
+        loss_S = self.term_S(S, outcome, torch.cat([confounders, treatment_targets], dim=-1),mask=flat_mask)
         train_loss = -loss_a-loss_b+self.s_alpha*loss_S
         self.log(f'{self.model_type}_train_loss', train_loss, on_epoch=True, on_step=False, sync_dist=True)
         return train_loss
     
 
 
-    def process_full_dataset(self, dataset, batch_size=32):
-        # 创建数据加载器
+    def process_full_dataset(self, dataset, batch_size=32, mc_samples=50):
         data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
-
-        # 初始化一个列表来收集每个批次的输出
         all_outputs = []
-
-        # 将模型设置为评估模式
         self.eval()
-
-        # 遍历数据加载器中的每个批次
         for batch in data_loader:
-            with torch.no_grad():  # 在推理时不计算梯度
-                output, _ = self.forward(batch)  # 确保forward函数适应DataLoader输出的批次格式
-                all_outputs.append(output)  # 如果需要在CPU上处理输出，确保使用.cpu()
-
-        # 你可能想要将所有批次的输出合并为一个Tensor
-        all_outputs = torch.cat(all_outputs, dim=0)  # 沿着合适的维度拼接
+            batch_outputs = []
+            for _ in range(mc_samples):
+                with torch.no_grad():
+                    output, _ = self.forward(batch)
+                    batch_outputs.append(output.unsqueeze(0))
+            # Average over the Monte Carlo samples
+            mc_mean_output = torch.mean(torch.cat(batch_outputs, dim=0), dim=0)
+            all_outputs.append(mc_mean_output)
+        all_outputs = torch.cat(all_outputs, dim=0)
 
         return all_outputs
-

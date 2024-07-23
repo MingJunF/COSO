@@ -42,7 +42,7 @@ def main(args: DictConfig):
     args.model.dim_vitals = dataset_collection.train_f.data['vitals'].shape[-1] if dataset_collection.has_vitals else 0
     args.model.dim_static_features = dataset_collection.train_f.data['static_features'].shape[-1]
     args.model.dim_cosovitals = dataset_collection.train_f.data['coso_vitals'].shape[-1] if dataset_collection.has_vitals else 0
-    args.model.dim_abstract_confounders = 10
+    args.model.dim_abstract_confounders = dataset_collection.train_f.data['vitals'].shape[-1] if dataset_collection.has_vitals else 0
     args.model.dim_s = dataset_collection.train_f.data['COSO'].shape[-1]
     # Train_callbacks
     multimodel_callbacks = [AlphaRise(rate=args.exp.alpha_rate)]
@@ -55,6 +55,23 @@ def main(args: DictConfig):
     else:
         mlf_logger = None
         artifacts_path = None
+    # ============================== Initialisation & Training of COSO ==============================
+    coso_model = instantiate(args.model.COSO, args, dataset_collection, _recursive_=False)
+
+    coso_trainer = Trainer(gpus=eval(str(args.exp.gpus)), logger=mlf_logger, max_epochs=300,
+                            terminate_on_nan=True)
+    coso_trainer.fit(coso_model)
+
+
+
+    train_cosovitals = coso_model.process_full_dataset(dataset_collection.train_f)
+    val_cosovitals= coso_model.process_full_dataset(dataset_collection.val_f)
+    test_cosovitals = coso_model.process_full_dataset(dataset_collection.test_f)
+    dataset_collection.train_f.data['vitals'] = train_cosovitals
+    dataset_collection.val_f.data['vitals'] = val_cosovitals
+    dataset_collection.test_f.data['vitals'] = test_cosovitals
+    if hasattr(dataset_collection, 'test_cf_one_step'): 
+        dataset_collection.test_cf_one_step.data['vitals'] = test_cosovitals
     # ============================== Initialisation & Training of multimodel ==============================
     multimodel = instantiate(args.model.multi, args, dataset_collection, _recursive_=False)
     if args.model.multi.tune_hparams:

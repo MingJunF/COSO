@@ -63,7 +63,7 @@ def main(args: DictConfig):
     # ============================== Initialisation & Training of COSO ==============================
     coso_model = instantiate(args.model.COSO, args, dataset_collection, _recursive_=False)
 
-    coso_trainer = Trainer(gpus=eval(str(args.exp.gpus)), logger=mlf_logger, max_epochs=100,
+    coso_trainer = Trainer(gpus=eval(str(args.exp.gpus)), logger=mlf_logger, max_epochs=args.exp.max_epochs,
                               callbacks=COSO_callbacks, terminate_on_nan=True)
     coso_trainer.fit(coso_model)
 

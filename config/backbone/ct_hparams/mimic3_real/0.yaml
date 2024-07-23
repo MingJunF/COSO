@@ -1,0 +1,31 @@
+# @package _global_
+dataset:
+  outcome_list:
+    - diastolic blood pressure
+
+model:
+  COSO:
+    optimizer:
+      learning_rate: 0.001
+    batch_size: 32
+    seq_hidden_units: 64
+    br_size: 72
+    fc_hidden_units: 36
+    dropout_rate: 0.4
+    s_alpha: 0.8
+  multi:
+    optimizer:
+      learning_rate: 0.0001
+    batch_size: 64
+    seq_hidden_units: 24
+    br_size: 22
+    fc_hidden_units: 22
+    dropout_rate: 0.2
+    num_layer: 2
+    num_heads: 3
+
+    self_positional_encoding:
+      max_relative_position: 30
+
+exp:
+  max_epochs: 300

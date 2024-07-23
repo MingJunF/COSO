@@ -22,15 +22,12 @@ def cond_indep_test(data, var_index, target_index, cond_set=[], is_discrete=Fals
     given a set of conditioning variables 'cond_set'.
     """
     n = data.shape[0]
-    # 注意这里的变量命名已经调整，以匹配实际意图
     Y = data[:, target_index].reshape(-1, 1)  # Target variable
     E = data[:, var_index].reshape(-1, 1)  # Variable to test
     if len(cond_set) > 0:
         X = data[:, cond_set]  # Conditioning set
     else:
         X = np.empty((n, 0))
-
-    # 根据变量类型调用相应的独立性测试
     if is_discrete:
         if len(cond_set) > 0:
             result = kci_test_vector(Y, E, X, alpha=alpha, catgorical_e=is_discrete)
@@ -43,13 +40,6 @@ def cond_indep_test(data, var_index, target_index, cond_set=[], is_discrete=Fals
     else:
         CI, dep, pval = cond_indep_fisher_z(data, var_index, target_index, cond_set, alpha)
     #else:
-
-
-
-
-
-
-        # 假设存在一个适用于连续变量的cond_indep_fisher_z函数
         #CI, dep, pval = cond_indep_fisher_z(data, var_index, target_index, cond_set, alpha)
     
     return pval, dep

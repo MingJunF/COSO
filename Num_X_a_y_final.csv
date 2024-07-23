@@ -1,0 +1,24 @@
+Source Name,dataset/num_covariates,dataset/num_confounder,Average encoder_text_rmse_all,StdDev encoder_text_rmse_all
+runnables/train_coso.py,5,1,15.932046592199999,5.877226514028827
+runnables/train_coso.py,5,2,16.2113696629,5.901675884989987
+runnables/train_coso.py,5,3,17.170454551999998,7.227298978120704
+runnables/train_coso.py,5,4,17.305485654,10.290083669878106
+runnables/train_coso.py,5,5,17.151397908,1.9713542114653724
+
+runnables/train_enc_dec.py,5,1,16.685572153,6.605430371910292
+runnables/train_enc_dec.py,5,2,17.156048712,7.250333419027319
+runnables/train_enc_dec.py,5,3,18.2167405487,5.4472129392348805
+runnables/train_enc_dec.py,5,4,18.77474226,11.318554807013985
+runnables/train_enc_dec.py,5,5,20.777168524,4.595618680285558
+
+runnables/train_gnet.py,5,1,15.598539725999998,5.0147842167751175
+runnables/train_gnet.py,5,2,16.9289375984,7.0117226198083324
+runnables/train_gnet.py,5,3,19.8365683675,6.3194699236082394
+runnables/train_gnet.py,5,4,21.673734738,16.32575133485809
+runnables/train_gnet.py,5,5,19.791659124,4.2956657034052546
+
+runnables/train_rmsn.py,5,1,19.630514413999997,4.099759319943437
+runnables/train_rmsn.py,5,2,39.645896568,26.788236067756564
+runnables/train_rmsn.py,5,3,31.42223397763067,9.877032842271177
+runnables/train_rmsn.py,5,4,37.726899368,25.63920264096193
+runnables/train_rmsn.py,5,5,27.95551102,5.869725169102017

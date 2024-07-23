@@ -11,7 +11,7 @@ class TestCTCancerSimulation:
         with initialize(config_path="../config"):
             args = compose(config_name="config.yaml", overrides=["+dataset=cancer_sim",
                                                                  "+backbone=ct",
-                                                                 "+backbone/ct_hparams/cancer_sim_domain_conf='2'",
+                                                                 "+backbone/ct_hparams/Simulated_data='2'",
                                                                  "exp.seed=10",
                                                                  "exp.logging=False", "exp.gpus=0",
                                                                  "dataset.num_patients.train=256",

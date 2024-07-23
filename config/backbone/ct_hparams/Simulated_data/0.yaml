@@ -1,0 +1,36 @@
+# @package _global_
+dataset:
+  num_confounder: 3
+  num_u: 1
+  datasize: 5000
+  total_time_step: 30
+  num_covariates: 5
+
+model:  
+  COSO:
+    optimizer:
+      learning_rate: 0.0001
+    batch_size: 32
+    seq_hidden_units: 128
+    br_size: 72
+    fc_hidden_units: 36
+    dropout_rate: 0.4
+    s_alpha: 0.9
+  multi:
+    optimizer:
+      learning_rate: 0.01
+    batch_size: 128
+    seq_hidden_units: 48
+    br_size: 8
+    fc_hidden_units: 8
+    dropout_rate: 0.1
+
+  self_positional_encoding:
+    max_relative_position: 15
+
+exp:
+  weights_ema: True
+  alpha: 0.01
+  beta: 0.99
+  balancing: domain_confusion
+  max_epochs: 150

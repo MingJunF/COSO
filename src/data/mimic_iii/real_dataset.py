@@ -550,7 +550,6 @@ class MIMIC3RealDatasetCollection(RealDatasetCollection):
 
         # 现在，treatments_np, outcomes_np, coso_vitals_np, 和 active_entries_np 都已准备好，可以被传递到 find_S_variable 函数中
         COSO_index = find_S_variable(treatments_np, outcomes_np, coso_vitals_np, active_entries_np)
-        COSO_index = 16
         if split['val'] > 0.0:
             static_features_train, static_features_val = train_test_split(static_features,
                                                                         test_size=split['val'] / (1 - split['test']),
